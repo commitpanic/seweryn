@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gry Seweryna</title>
+  <link rel="stylesheet" href="start.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Gry Seweryna</h1>
+      <p>Wybierz grę i graj!</p>
+    </header>
+
+    <div class="gry">
+      <!-- GRA 1: pianino -->
+      <a class="gra" href="pianino/index.html" style="--kolor: #ffd23f">
+        <svg class="obrazek" viewBox="0 0 140 100" aria-hidden="true">
+          <rect width="140" height="100" fill="#1d1245" />
+          <rect x="24" y="6" width="12" height="18" rx="3" fill="#ffd23f" />
+          <rect x="84" y="20" width="12" height="18" rx="3" fill="#4cc9f0" />
+          <rect x="104" y="0" width="12" height="14" rx="3" fill="#c77dff" />
+          <rect x="4" y="28" width="12" height="16" rx="3" fill="#ff5a5f" />
+          <rect x="0" y="50" width="140" height="3" fill="#8a1538" />
+          <g fill="#f4f1ea" stroke="#d6cfbf">
+            <rect x="0.5" y="53" width="19" height="46" rx="2" />
+            <rect x="20.5" y="53" width="19" height="46" rx="2" />
+            <rect x="40.5" y="53" width="19" height="46" rx="2" />
+            <rect x="60.5" y="53" width="19" height="46" rx="2" />
+            <rect x="80.5" y="53" width="19" height="46" rx="2" />
+            <rect x="100.5" y="53" width="19" height="46" rx="2" />
+            <rect x="120.5" y="53" width="19" height="46" rx="2" />
+          </g>
+          <g fill="#1b1a24">
+            <rect x="14" y="53" width="12" height="27" rx="2" />
+            <rect x="34" y="53" width="12" height="27" rx="2" />
+            <rect x="74" y="53" width="12" height="27" rx="2" />
+            <rect x="94" y="53" width="12" height="27" rx="2" />
+            <rect x="114" y="53" width="12" height="27" rx="2" />
+          </g>
+        </svg>
+        <h2>Spadające nuty</h2>
+        <p>Naciskaj klawisze pianina, zanim spadające prostokąty do nich dolecą. Trafiaj i graj melodie!</p>
+        <div class="dol">
+          <span class="rekord" data-klucz="spadajace-nuty-rekord"></span>
+          <span class="graj">Graj ▶</span>
+        </div>
+      </a>
+
+      <!-- GRA 2: wyścigi -->
+      <a class="gra" href="wyscigi/index.html" style="--kolor: #ff5a5f">
+        <svg class="obrazek" viewBox="0 0 140 100" aria-hidden="true">
+          <rect width="140" height="100" fill="#2f8f46" />
+          <circle cx="12" cy="20" r="8" fill="#1f6b35" />
+          <circle cx="128" cy="66" r="9" fill="#1f6b35" />
+          <circle cx="10" cy="78" r="6" fill="#3c9a52" />
+          <rect x="26" y="0" width="88" height="100" fill="#3a3d46" />
+          <g fill="#ffffff" opacity="0.85">
+            <rect x="54" y="2" width="3" height="16" />
+            <rect x="54" y="34" width="3" height="16" />
+            <rect x="54" y="66" width="3" height="16" />
+            <rect x="83" y="18" width="3" height="16" />
+            <rect x="83" y="50" width="3" height="16" />
+            <rect x="83" y="82" width="3" height="16" />
+          </g>
+          <!-- niebieskie auto z przodu -->
+          <rect x="90" y="10" width="18" height="33" rx="5" fill="#4cc9f0" />
+          <rect x="92.5" y="17" width="13" height="6" rx="2" fill="#1d2b4a" />
+          <!-- czerwone auto gracza -->
+          <rect x="59" y="52" width="22" height="40" rx="6" fill="#e63946" />
+          <rect x="66.5" y="52.5" width="2" height="39" fill="#fff" />
+          <rect x="71.5" y="52.5" width="2" height="39" fill="#fff" />
+          <rect x="62" y="61" width="16" height="7" rx="2" fill="#1d2b4a" />
+          <rect x="63" y="80" width="14" height="5" rx="2" fill="#1d2b4a" />
+        </svg>
+        <h2>Wyścigi</h2>
+        <p>Pędź po drodze i omijaj inne auta. Każde wyprzedzone auto to punkt!</p>
+        <div class="dol">
+          <span class="rekord" data-klucz="wyscigi-rekord"></span>
+          <span class="graj">Graj ▶</span>
+        </div>
+      </a>
+    </div>
+
+    <footer>Możesz też nacisnąć <kbd>1</kbd> albo <kbd>2</kbd>, żeby włączyć grę.</footer>
+  </main>
+
+  <script>
+    // Pokazujemy rekordy z obu gier (gry zapisują je w przeglądarce)
+    for (const el of document.querySelectorAll('.rekord')) {
+      let rekord = 0;
+      try {
+        rekord = parseInt(localStorage.getItem(el.dataset.klucz), 10) || 0;
+      } catch (e) {
+        // przeglądarka nie pozwala czytać – trudno, nie pokażemy rekordu
+      }
+      el.textContent = rekord > 0 ? `🏆 Rekord: ${rekord} pkt` : 'Jeszcze bez rekordu';
+    }
+
+    // Klawisze 1, 2, ... włączają gry po kolei
+    const gry = [...document.querySelectorAll('.gra')];
+    window.addEventListener('keydown', (e) => {
+      const nr = parseInt(e.key, 10);
+      if (nr >= 1 && nr <= gry.length) window.location.href = gry[nr - 1].href;
+    });
+  </script>
+</body>
+</html>
