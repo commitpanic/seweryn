@@ -56,6 +56,24 @@ Każdy tryb ma swój własny rekord.
 - Kiedy rzucasz, kosz stoi w miejscu. Po każdym trafieniu przenosi się w nowe miejsce: bliżej albo dalej, wyżej albo niżej.
 - Co 10 punktów nowy poziom: kosz może stać jeszcze dalej, wyżej i niżej.
 
+## 🐸 Żabi skok
+
+Żabka zaczyna na dole, na chodniku, a na górze jest staw. Po drodze są ulice pełne aut. Skacz pole po polu i nie daj się potrącić!
+
+| Sterowanie | Co robi |
+|---|---|
+| `←` `↑` `→` `↓` albo `W` `A` `S` `D` | skok o jedno pole |
+| palec | przesuń w stronę skoku albo stuknij obok żabki |
+| `Spacja` | start / skacz dalej |
+| `P` / `Esc` | pauza |
+| `M` | wycisz dźwięk |
+
+- Skok do przodu na nowy rząd = 1 pkt, mucha = 5 pkt, wskoczenie do stawu = 10 pkt.
+- Złota mucha daje dodatkowe serce (najwięcej 5).
+- 3 życia: potrącenie zabiera jedno i żabka wraca na start.
+- Na trawie jest bezpiecznie.
+- Każdy staw to nowy poziom: nowe ulice i szybsze auta. Od poziomu 2 jeżdżą motory i ciężarówki, a od poziomu 3 autobusy.
+
 Na telefonie we wszystkich grach steruje się palcem.
 
 ## Jak zmieniać gry
@@ -67,4 +85,5 @@ index.html        ← strona startowa z grami
 pianino/gra.js    ← Spadające nuty
 wyscigi/gra.js    ← Wyścigi
 koszykowka/gra.js ← Koszykówka
+zaba/gra.js       ← Żabi skok
 ```
