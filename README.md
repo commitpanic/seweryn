@@ -74,6 +74,33 @@ Każdy tryb ma swój własny rekord.
 - Na trawie jest bezpiecznie.
 - Każdy staw to nowy poziom: nowe ulice i szybsze auta. Od poziomu 2 jeżdżą motory i ciężarówki, a od poziomu 3 autobusy.
 
+## 🦸 Na ratunek!
+
+Przygoda w stylu pixel art. Zły czarodziej Gburek porywa przyjaciół i zamyka ich w klatkach. W każdym z 6 etapów porwany jest ktoś inny, a ty wybierasz, kto z pozostałej dwójki idzie na ratunek. Dobiegnij do klatki i otwórz ją!
+
+| Bohater | Supermoc |
+|---|---|
+| Helenka | podwójny skok: w powietrzu może skoczyć jeszcze raz |
+| Seweryn | biega najszybciej, a rozpędzony biegnie nawet po wodzie |
+| Franek | skacze najwyżej i rozbija cegły głową |
+
+Krainy: Słoneczna Łąka, Grzybowy Las, Gorąca Pustynia, Lodowa Kraina (ślisko!), Ognisty Wulkan i Zamek Gburka, gdzie na końcu czeka sam Gburek. Trzeba mu 3 razy skoczyć na głowę.
+
+| Klawisze | Co robią |
+|---|---|
+| `←` `→` albo `A` `D` | bieg |
+| `↑` / `W` / `Spacja` | skok (przytrzymaj, żeby skoczyć wyżej) |
+| `↓` | zeskok z cienkiej półki |
+| `X` | strzał z bańkomiotacza |
+| `P` / `Esc` | pauza |
+| `M` | wycisz dźwięk |
+
+- Znajdźki: 🚀 **plecak rakietowy** (trzymaj skok w powietrzu i leć, aż skończy się paliwo), 🫧 **bańkomiotacz** (bańka zamyka wroga, a Gburka na chwilę zatrzymuje) i 🧲 **magnes** (monety same przylatują).
+- 3 serca. Upadek do wody, lawy albo przepaści zabiera jedno serce. Bez serc wracasz do ostatniej flagi.
+- Na glutki i bzyki można skakać, na jeżyki nie, bo mają kolce!
+- W każdym etapie są 3 gwiazdki. Niektóre zdobędzie tylko jeden bohater, więc zagraj każdym!
+- Gra zapamiętuje otwarte etapy i zdobyte gwiazdki.
+
 Na telefonie we wszystkich grach steruje się palcem.
 
 ## Jak zmieniać gry
@@ -86,4 +113,10 @@ pianino/gra.js    ← Spadające nuty
 wyscigi/gra.js    ← Wyścigi
 koszykowka/gra.js ← Koszykówka
 zaba/gra.js       ← Żabi skok
+ratunek/gra.js       ← Na ratunek! (ustawienia, bohaterowie, zasady)
+ratunek/poziomy.js   ← mapy etapów narysowane literkami
+ratunek/piksele.js   ← postacie narysowane piksel po pikselu
+ratunek/rysowanie.js ← kolory krain i rysowanie
 ```
+
+W grze „Na ratunek!” możesz sam narysować etap: otwórz `ratunek/poziomy.js`, zmień literki na mapie (na górze pliku jest legenda: `#` ziemia, `o` moneta, `g` glutek…) i odśwież stronę.
