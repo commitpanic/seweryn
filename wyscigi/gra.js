@@ -119,9 +119,25 @@ function przygotujDzwiek() {
     wzmacniacz.connect(kompresor);
     kompresor.connect(audio.destination);
   }
-  if (audio.state === 'suspended') audio.resume();
+  if (audio.state !== 'running') {
+    audio.resume();
+    // iPhone włącza dźwięk dopiero wtedy, gdy coś zagra zaraz po dotknięciu – gramy chwilkę ciszy
+    const cisza = audio.createBufferSource();
+    cisza.buffer = audio.createBuffer(1, 1, audio.sampleRate);
+    cisza.connect(audio.destination);
+    cisza.start(0);
+  }
   return true;
 }
+
+// iPhone: dźwięk gra nawet wtedy, gdy telefon jest wyciszony przełącznikiem z boku
+try {
+  if (navigator.audioSession) navigator.audioSession.type = 'playback';
+} catch (e) {
+  // starszy iPhone – trudno
+}
+// iPhone pozwala włączyć dźwięk dopiero po puszczeniu palca (samo dotknięcie nie wystarcza)
+for (const zdarzenie of ['touchend', 'click']) window.addEventListener(zdarzenie, () => przygotujDzwiek());
 
 // Krótki dźwięk (pisk, bip)
 function pisk(czestotliwosc, dlugosc = 0.15, typ = 'square', glosnosc = 0.12, opoznienie = 0) {
