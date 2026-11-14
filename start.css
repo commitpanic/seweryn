@@ -13,7 +13,7 @@ body {
 }
 
 main {
-  max-width: 800px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 40px 16px 32px;
 }
@@ -41,7 +41,7 @@ header p {
 
 .gry {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
 
@@ -96,6 +96,12 @@ header p {
   font-size: 14px;
   color: #3ddc97;
   font-weight: 600;
+}
+
+/* kilka rekordów jednej gry – jeden pod drugim */
+.rekordy {
+  display: flex;
+  flex-direction: column;
 }
 
 .graj {
