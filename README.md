@@ -118,9 +118,15 @@ Przepisy: zupa pomidorowa, naleśniki, sałatka owocowa, pizza i sok pomarańczo
 
 | Klawisze | Co robią |
 |---|---|
-| `1` – `5` | wybór przepisu |
+| `1` – `6` | wybór przepisu (`6` to Moja potrawa) |
 | `Esc` / `Q` | powrót do książki / do menu gier |
 | `M` | wycisz dźwięk i mowę |
+
+**Moja potrawa** (ostatnia karta w książce): wybierasz, co gotujesz (zupę, pizzę, naleśniki, sałatkę albo sok), a potem bierzesz ze spiżarni, co tylko chcesz, i stukasz **Gotowe**. Ale uwaga: jak smaki do siebie nie pasują, przyjaciele się krzywią i mówią „bleee!”. Dziwne jest na przykład:
+  - owoce w zupie albo na pizzy („Banan na pizzy? Dziwne!”),
+  - słone rzeczy w soku (ale sok marchewkowy i pomidorowy jest OK),
+  - słodkie razem ze słonym („Truskawka i salami? Dziwne połączenie!”),
+  - lód gdzie indziej niż w soku.
 
 - Jak wrzucisz do garnka coś, czego się nie je (np. but albo skarpetkę), to odbije się z powrotem.
 - Każde ugotowanie dodaje gwiazdkę w książce kucharskiej.
@@ -148,5 +154,7 @@ kuchnia/rysowanie.js ← garnki, zwierzaki i kuchnia
 ```
 
 W grze „Na ratunek!” możesz sam narysować etap: otwórz `ratunek/poziomy.js`, zmień literki na mapie (na górze pliku jest legenda: `#` ziemia, `o` moneta, `g` glutek…) i odśwież stronę.
+
+W „Kuchni Helenki” możesz też zmienić, co pasuje do czego: w `kuchnia/przepisy.js` lista `SMAKI` mówi, co jest słodkie, a co słone, a `SPIZARNIA` – co stoi w spiżarni.
 
 W „Kuchni Helenki” możesz dopisać własny przepis: otwórz `kuchnia/przepisy.js`, skopiuj jeden przepis z listy `PRZEPISY` i zmień kroki (na górze pliku jest opis każdego rodzaju kroku).

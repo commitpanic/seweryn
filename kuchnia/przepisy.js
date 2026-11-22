@@ -166,3 +166,84 @@ const PRZYJACIELE = [
 ];
 
 const POCHWALY = ['Super!', 'Brawo!', 'Świetnie!', 'Pięknie!', 'Ekstra!', 'Wspaniale!'];
+
+
+// =====================================================
+//   MOJA POTRAWA – gotujesz z czego chcesz!
+// =====================================================
+
+// Jak coś smakuje: 'slodki' (owoce), 'slony' (warzywa, wędlina),
+// 'neutralny' (pasuje do wszystkiego), 'zimny' (pasuje tylko do soku)
+const SMAKI = {
+  pomidor: 'slony', marchewka: 'slony', pietruszka: 'slony', ziemniak: 'slony',
+  brokul: 'slony', pieczarka: 'slony', salami: 'slony',
+  banan: 'slodki', jablko: 'slodki', truskawka: 'slodki', jagody: 'slodki',
+  winogrona: 'slodki', pomarancza: 'slodki', cytryna: 'slodki', gruszka: 'slodki',
+  ser: 'neutralny', chleb: 'neutralny',
+  lod: 'zimny',
+};
+
+// Warzywa, z których też robi się sok (sok marchewkowy jest pyszny!)
+const DO_SOKU_TEZ = ['pomidor', 'marchewka'];
+
+// Co stoi w spiżarni – z tego wybierasz składniki do swojej potrawy
+const SPIZARNIA = [
+  'pomidor', 'marchewka', 'ziemniak', 'brokul', 'pieczarka', 'pietruszka',
+  'ser', 'salami', 'chleb', 'banan', 'jablko', 'truskawka',
+  'jagody', 'winogrona', 'pomarancza', 'gruszka', 'lod', 'skarpetka',
+];
+
+// Rodzaje własnych potraw.
+// smak: jaki smak pasuje do tej potrawy ('slony', 'slodki' albo null = każdy, byle się nie mieszał)
+// gdzie: jak się mówi, że coś jest w tej potrawie („Banan w zupie? Dziwne!”)
+// Krok 'dowolne' to ten, w którym wrzucasz, co chcesz.
+const WLASNE = [
+  {
+    typ: 'zupa', nazwa: 'Moja zupa', naczynie: 'garnek', porcja: 'miseczka', kolor: '#e8c170',
+    gdzie: 'w zupie', smak: 'slony',
+    kroki: [
+      { co: 'polej', skladnik: 'woda', tekst: 'Nalej wody do garnka' },
+      { co: 'dowolne', tekst: 'Wrzuć do garnka, co chcesz!' },
+      { co: 'gotuj', tekst: 'Włącz kuchenkę' },
+      { co: 'mieszaj', ile: 2, tekst: 'Zamieszaj zupę łyżką' },
+    ],
+  },
+  {
+    typ: 'pizza', nazwa: 'Moja pizza', naczynie: 'pizza', porcja: 'pizza', kolor: '#f0c060',
+    gdzie: 'na pizzy', smak: 'slony',
+    kroki: [
+      { co: 'walkuj', tekst: 'Rozwałkuj ciasto. Jeździj palcem tam i z powrotem!' },
+      { co: 'smaruj', skladnik: 'sos', tekst: 'Posmaruj ciasto sosem. Maluj palcem!' },
+      { co: 'smaruj', skladnik: 'ser', tekst: 'Posyp pizzę serem' },
+      { co: 'dowolne', tekst: 'Połóż na pizzy, co chcesz!' },
+      { co: 'piecz', tekst: 'Włóż pizzę do piekarnika. Stuknij w piekarnik!' },
+    ],
+  },
+  {
+    typ: 'nalesniki', nazwa: 'Moje naleśniki', naczynie: 'patelnia', porcja: 'nalesnik', kolor: '#f3dc9b',
+    gdzie: 'na naleśniku', smak: null,
+    kroki: [
+      { co: 'smaz', tekst: 'Stuknij w patelnię, żeby usmażyć naleśnika' },
+      { co: 'dowolne', tekst: 'Połóż na naleśniku, co chcesz!' },
+    ],
+  },
+  {
+    typ: 'salatka', nazwa: 'Moja sałatka', naczynie: 'miska', porcja: 'miseczka', kolor: null,
+    gdzie: 'w sałatce', smak: null,
+    kroki: [
+      { co: 'dowolne', tekst: 'Wrzuć do miski, co chcesz!' },
+      { co: 'mieszaj', ile: 2, tekst: 'Wymieszaj sałatkę' },
+    ],
+  },
+  {
+    typ: 'sok', nazwa: 'Mój sok', naczynie: 'dzbanek', porcja: 'szklanka', kolor: '#ffa62b',
+    gdzie: 'w soku', smak: 'slodki',
+    kroki: [
+      { co: 'dowolne', tekst: 'Wrzuć do dzbanka, co chcesz!' },
+      { co: 'mieszaj', ile: 2, tekst: 'Zamieszaj sok' },
+    ],
+  },
+];
+
+// Co mówią przyjaciele, kiedy coś im nie smakuje
+const FUJ = ['Bleee!', 'Fuj!', 'Ojej!', 'Dziwne!', 'Brrr!'];

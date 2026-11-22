@@ -168,6 +168,11 @@ function rysujPlasterek(e, czesc, z, x, y, wielkosc, dx = 0, obrot = 0, alfa = 1
 
 // Kawałek leżący osobno (np. w garnku): plasterek przesunięty tak, żeby jego środek był w (x, y)
 function rysujKawalek(e, czesc, z, x, y, wielkosc, obrot = 0, alfa = 1) {
+  if (e[0] === '*') {
+    // rysunek (np. salami) – nie kroimy go, tylko rysujemy trochę mniejszy
+    rysujObrazek(e, x, y, wielkosc * 0.75, obrot, alfa);
+    return;
+  }
   if (czesc < 0) {
     rysujEmotke(e, x, y, wielkosc, obrot, alfa);
     return;
@@ -962,9 +967,12 @@ function rysujNalesnik(n, R, e) {
       ctx.fill();
     }
   }
-  // dżem
+  // dżem i dodatki
   if (nl.skok < 1) rysujWarstwy(n, R, e, y);
   ctx.restore();
+  if (nl.skok < 1) {
+    for (const d of n.dodatki) rysujObrazek(SKLADNIKI[d.sk].obrazek, d.u * R, y + d.v * R * e - 6, 50, d.obrot);
+  }
   ctx.strokeStyle = zloty ? 'rgba(170, 100, 30, 0.6)' : 'rgba(210, 180, 110, 0.7)';
   ctx.lineWidth = 3;
   elipsa(0, y, rx, ry);
@@ -1329,9 +1337,10 @@ function rysujPorcje(p, x, y, s, zostalo) {
   ctx.fill();
   switch (p.porcja) {
     case 'miseczka': porcjaMiseczka(p, zostalo); break;
-    case 'nalesnik': porcjaNalesnik(zostalo); break;
-    case 'pizza': porcjaPizza(zostalo); break;
+    case 'nalesnik': porcjaNalesnik(zostalo, p); break;
+    case 'pizza': porcjaPizza(zostalo, p); break;
     case 'szklanka': porcjaSzklanka(p, zostalo); break;
+    case 'wlasna': porcjaWlasna(); break;
   }
   ctx.restore();
 }
@@ -1377,7 +1386,7 @@ function porcjaMiseczka(p, zostalo) {
     const miejsca = p.kolor
       ? [[-24, -48], [4, -42], [26, -50]]
       : [[-28, -54], [0, -58], [26, -54], [-14, -44], [14, -42]];
-    const ile = Math.ceil(miejsca.length * zostalo);
+    const ile = kawalki.length ? Math.ceil(miejsca.length * zostalo) : 0;
     for (let i = 0; i < ile; i++) {
       const sk = kawalki[i % kawalki.length];
       rysujKawalek(SKLADNIKI[sk].obrazek, p.kolor ? 1 : -1, 3, miejsca[i][0], miejsca[i][1], p.kolor ? 30 : 34, i * 0.7);
@@ -1389,7 +1398,26 @@ function porcjaMiseczka(p, zostalo) {
   ctx.stroke();
 }
 
-function porcjaNalesnik(zostalo) {
+// Karta „Moja potrawa”: miseczka, z której wyskakują różne składniki
+function porcjaWlasna() {
+  porcjaMiseczka({ kolor: '#d9b3ff', wPorcji: [] }, 1);
+  rysujEmotke('🍅', -34, -72, 36, -0.4);
+  rysujEmotke('🍌', 0, -92, 40, 0.2);
+  rysujEmotke('🧀', 34, -70, 34, 0.35);
+  rysujGwiazdke(-58, -104, 9, true);
+  rysujGwiazdke(56, -112, 11, true);
+  rysujGwiazdke(4, -134, 7, true);
+}
+
+// Kawałki własnej potrawy (jeśli to własna potrawa), położone w podanych miejscach
+function kawalkiPorcji(p, miejsca, wielkosc) {
+  const lista = p.wPorcji || [];
+  for (let i = 0; i < Math.min(lista.length, miejsca.length); i++) {
+    rysujObrazek(SKLADNIKI[lista[i]].obrazek, miejsca[i][0], miejsca[i][1], wielkosc, (i - 1) * 0.4);
+  }
+}
+
+function porcjaNalesnik(zostalo, p = {}) {
   talerz();
   if (zostalo <= 0.01) return;
   const L = 120 * Math.max(0.2, zostalo);
@@ -1418,10 +1446,11 @@ function porcjaNalesnik(zostalo) {
   ctx.fillStyle = '#c8173f';
   elipsa(L * 0.5, 15, 10, 5);
   ctx.fill();
+  if (p.wlasny) kawalkiPorcji(p, [[L * 0.3, -18], [L * 0.62, -20]], 30);
   ctx.restore();
 }
 
-function porcjaPizza(zostalo) {
+function porcjaPizza(zostalo, p = {}) {
   talerz();
   if (zostalo <= 0.01) return;
   ctx.save();
@@ -1454,9 +1483,13 @@ function porcjaPizza(zostalo) {
     elipsa(x, y, 6, 3);
     ctx.fill();
   }
-  rysujObrazek('*salami', -22, -32, 22);
-  rysujObrazek('*salami', 18, -36, 20);
-  rysujObrazek('*pieczarka', 0, -18, 22);
+  if (p.wlasny) {
+    kawalkiPorcji(p, [[-22, -32], [18, -36], [0, -16]], 24);
+  } else {
+    rysujObrazek('*salami', -22, -32, 22);
+    rysujObrazek('*salami', 18, -36, 20);
+    rysujObrazek('*pieczarka', 0, -18, 22);
+  }
   ctx.restore();
 }
 
@@ -1535,6 +1568,16 @@ function oczka(dx, y, rodzaj, kolor = '#2b2233', r = 8) {
       ctx.beginPath();
       ctx.arc(x, y + r * 0.5, r, Math.PI * 1.15, Math.PI * 1.85);
       ctx.stroke();
+    } else if (rodzaj === 'k') {
+      // zaciśnięte oczy > < (coś nie smakuje)
+      ctx.strokeStyle = kolor;
+      ctx.lineWidth = 4;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x + sx * r * 0.7, y - r * 0.7);
+      ctx.lineTo(x - sx * r * 0.6, y);
+      ctx.lineTo(x + sx * r * 0.7, y + r * 0.7);
+      ctx.stroke();
     } else if (rodzaj === 'z') {
       ctx.strokeStyle = kolor;
       ctx.lineWidth = 4;
@@ -1553,7 +1596,26 @@ function oczka(dx, y, rodzaj, kolor = '#2b2233', r = 8) {
   }
 }
 
+let fujTeraz = false;   // czy rysowany zwierzak się krzywi
+
 function buzka(y, otwarcie, szer = 12, jezyk = false, kolor = '#2b2233') {
+  if (fujTeraz) {
+    // krzywa buzia i wystawiony język: „bleee!”
+    ctx.fillStyle = '#ff7f96';
+    ctx.beginPath();
+    ctx.ellipse(szer * 0.3, y + 9, 7, 10, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = kolor;
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= 6; i++) {
+      const x = -szer * 1.1 + i * szer * 2.2 / 6;
+      ctx.lineTo(x, y + 2 + (i % 2 ? -3 : 3));
+    }
+    ctx.stroke();
+    return;
+  }
   if (otwarcie > 0.05) {
     ctx.fillStyle = '#7a2230';
     elipsa(0, y + 4, szer * 0.85, 3 + otwarcie * 11);
@@ -1608,7 +1670,7 @@ function kolce(x, y, rZew, rWew, ile, kolor) {
 
 function rysujZwierzaka(z, x, y, s) {
   ctx.save();
-  ctx.translate(x, y - (z.skok || 0));
+  ctx.translate(x + (z.drzenie || 0), y - (z.skok || 0));
   ctx.scale(s, s);
   const rysuj = ZWIERZAKI[z.typ];
   if (rysuj) {
@@ -1617,7 +1679,18 @@ function rysujZwierzaka(z, x, y, s) {
     ctx.translate(0, -70);
     ctx.rotate(z.przechyl || 0);
     ctx.translate(0, 70);
+    fujTeraz = !!z.fuj;
     rysuj.glowa(z);
+    fujTeraz = false;
+    if (z.fuj) {
+      // kropelka potu
+      ctx.fillStyle = '#8fd0f5';
+      ctx.beginPath();
+      ctx.moveTo(58, -160);
+      ctx.quadraticCurveTo(70, -140, 58, -134);
+      ctx.quadraticCurveTo(46, -140, 58, -160);
+      ctx.fill();
+    }
     ctx.restore();
   }
   ctx.restore();
