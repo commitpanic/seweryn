@@ -299,9 +299,54 @@
           <span class="graj">Graj ▶</span>
         </div>
       </a>
+      <!-- GRA 6: kuchnia helenki -->
+      <a class="gra" href="kuchnia/index.html" style="--kolor: #ff7eb6">
+        <svg class="obrazek" viewBox="0 0 140 100" aria-hidden="true">
+          <rect width="140" height="100" fill="#fff4dc" />
+          <g stroke="#f1dfba" stroke-width="1">
+            <line x1="0" y1="20" x2="140" y2="20" /><line x1="0" y1="40" x2="140" y2="40" />
+            <line x1="35" y1="0" x2="35" y2="62" /><line x1="70" y1="0" x2="70" y2="62" /><line x1="105" y1="0" x2="105" y2="62" />
+          </g>
+          <!-- blat -->
+          <rect y="62" width="140" height="38" fill="#e9b47a" />
+          <rect y="62" width="140" height="2" fill="#f6cf9c" />
+          <!-- garnek z zupą -->
+          <rect x="66" y="78" width="54" height="5" rx="2" fill="#3b3f4c" />
+          <path d="M70 52 L72 76 Q72 79 75 79 L111 79 Q114 79 114 76 L116 52 Z" fill="#e2554b" />
+          <g fill="#ffffff" opacity="0.85">
+            <circle cx="78" cy="64" r="1.6" /><circle cx="88" cy="70" r="1.6" /><circle cx="98" cy="64" r="1.6" /><circle cx="108" cy="70" r="1.6" />
+          </g>
+          <ellipse cx="93" cy="52" rx="23" ry="6" fill="#e0452b" stroke="#f58f85" stroke-width="2" />
+          <rect x="88" y="49" width="4" height="4" rx="1" fill="#f28b1e" />
+          <rect x="96" y="50" width="4" height="3" rx="1" fill="#3aa84a" />
+          <!-- para -->
+          <g fill="#ffffff" opacity="0.8">
+            <circle cx="86" cy="40" r="4" /><circle cx="96" cy="34" r="5" /><circle cx="104" cy="41" r="3.5" />
+          </g>
+          <!-- łyżka -->
+          <line x1="101" y1="51" x2="118" y2="26" stroke="#c88a4c" stroke-width="3" stroke-linecap="round" />
+          <!-- kotek zagląda -->
+          <path d="M14 46 L17 34 L25 41 Z" fill="#f4a340" />
+          <path d="M42 46 L39 34 L31 41 Z" fill="#f4a340" />
+          <ellipse cx="28" cy="52" rx="15" ry="13" fill="#f4a340" />
+          <circle cx="23" cy="50" r="1.8" fill="#2b2233" /><circle cx="33" cy="50" r="1.8" fill="#2b2233" />
+          <path d="M26.5 54 L29.5 54 L28 56 Z" fill="#ff8fa3" />
+          <circle cx="19" cy="55" r="2.2" fill="#ff7896" opacity="0.5" /><circle cx="37" cy="55" r="2.2" fill="#ff7896" opacity="0.5" />
+          <rect x="0" y="62" width="60" height="2" fill="#f6cf9c" />
+          <ellipse cx="20" cy="64" rx="5" ry="3" fill="#f4a340" /><ellipse cx="36" cy="64" rx="5" ry="3" fill="#f4a340" />
+          <!-- serduszko -->
+          <path d="M48 30 C44 26 44 22 48 24 C52 22 52 26 48 30 Z" fill="#ff5a7a" />
+        </svg>
+        <h2>Kuchnia Helenki</h2>
+        <p>Kroisz, mieszasz, gotujesz, a potem częstujesz pandę, jeżyka, małpkę, kotka i pieska. Bez pośpiechu!</p>
+        <div class="dol">
+          <span class="rekord" data-klucz="kuchnia-helenki-rekord" data-tekst="🍲 Ugotowane potrawy: {n}" data-pusty="Jeszcze nic nie ugotowane"></span>
+          <span class="graj">Graj ▶</span>
+        </div>
+      </a>
     </div>
 
-    <footer>Możesz też nacisnąć klawisz od <kbd>1</kbd> do <kbd>5</kbd>, żeby włączyć grę.</footer>
+    <footer>Możesz też nacisnąć klawisz od <kbd>1</kbd> do <kbd>6</kbd>, żeby włączyć grę.</footer>
   </main>
 
   <script>
@@ -318,10 +363,12 @@
           // przeglądarka nie pozwala czytać – trudno, nie pokażemy rekordu
         }
         const nazwa = el.dataset.nazwa || 'Rekord';
-        el.textContent = rekord > 0 ? `🏆 ${nazwa}: ${rekord} pkt` : '';
+        // gra może mieć własny napis, np. „Ugotowane potrawy: {n}” ({n} zamienia się na liczbę)
+        const wzor = el.dataset.tekst || `🏆 ${nazwa}: {n} pkt`;
+        el.textContent = rekord > 0 ? wzor.replace('{n}', rekord) : '';
         if (rekord > 0) jestRekord = true;
       }
-      if (!jestRekord && pola.length > 0) pola[0].textContent = 'Jeszcze bez rekordu';
+      if (!jestRekord && pola.length > 0) pola[0].textContent = pola[0].dataset.pusty || 'Jeszcze bez rekordu';
     }
 
     // Klawisze 1, 2, ... włączają gry po kolei

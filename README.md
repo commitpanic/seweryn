@@ -101,6 +101,31 @@ Krainy: Słoneczna Łąka, Grzybowy Las, Gorąca Pustynia, Lodowa Kraina (ślisk
 - W każdym etapie są 3 gwiazdki. Niektóre zdobędzie tylko jeden bohater, więc zagraj każdym!
 - Gra zapamiętuje otwarte etapy i zdobyte gwiazdki.
 
+## 🍲 Kuchnia Helenki
+
+Gra dla Helenki. Wybierasz przepis z książki kucharskiej i gotujesz krok po kroku, a na końcu częstujesz przyjaciół: pandę, jeżyka, małpkę, kotka i pieska. Nie ma pośpiechu i nie da się przegrać. Gra mówi, co trzeba zrobić, a jak długo nic się nie dzieje, rączka pokazuje, gdzie stuknąć.
+
+Przepisy: zupa pomidorowa, naleśniki, sałatka owocowa, pizza i sok pomarańczowy.
+
+| Co robisz | Jak |
+|---|---|
+| kroisz | stukasz w warzywo albo owoc |
+| wrzucasz, nalewasz, sypiesz | przeciągasz palcem do garnka albo miski |
+| mieszasz, wyciskasz sok | kręcisz palcem w kółko |
+| wałkujesz ciasto | jeździsz palcem tam i z powrotem |
+| smarujesz sosem, serem, dżemem | malujesz palcem |
+| gotujesz, pieczesz, smażysz | stukasz w kuchenkę, piekarnik albo patelnię (a w garnku można łapać bąbelki!) |
+
+| Klawisze | Co robią |
+|---|---|
+| `1` – `5` | wybór przepisu |
+| `Esc` / `Q` | powrót do książki / do menu gier |
+| `M` | wycisz dźwięk i mowę |
+
+- Jak wrzucisz do garnka coś, czego się nie je (np. but albo skarpetkę), to odbije się z powrotem.
+- Każde ugotowanie dodaje gwiazdkę w książce kucharskiej.
+- Mowa działa, kiedy w telefonie albo komputerze jest polski głos (iPhone i Windows go mają).
+
 Na telefonie we wszystkich grach steruje się palcem.
 
 ## Jak zmieniać gry
@@ -117,6 +142,11 @@ ratunek/gra.js       ← Na ratunek! (ustawienia, bohaterowie, zasady)
 ratunek/poziomy.js   ← mapy etapów narysowane literkami
 ratunek/piksele.js   ← postacie narysowane piksel po pikselu
 ratunek/rysowanie.js ← kolory krain i rysowanie
+kuchnia/gra.js       ← Kuchnia Helenki (ustawienia i zasady)
+kuchnia/przepisy.js  ← przepisy, składniki i przyjaciele
+kuchnia/rysowanie.js ← garnki, zwierzaki i kuchnia
 ```
 
 W grze „Na ratunek!” możesz sam narysować etap: otwórz `ratunek/poziomy.js`, zmień literki na mapie (na górze pliku jest legenda: `#` ziemia, `o` moneta, `g` glutek…) i odśwież stronę.
+
+W „Kuchni Helenki” możesz dopisać własny przepis: otwórz `kuchnia/przepisy.js`, skopiuj jeden przepis z listy `PRZEPISY` i zmień kroki (na górze pliku jest opis każdego rodzaju kroku).
