@@ -21,6 +21,7 @@ const USTAWIENIA = {
   czasGotowania: 6,        // ile sekund gotuje się zupa
   czasPieczenia: 5,        // ile sekund piecze się pizza
   czasSmazenia: 3.5,       // ile sekund smaży się naleśnik, zanim trzeba go przewrócić
+  czasGofrow: 4,           // ile sekund pieką się gofry w gofrownicy
   podpowiedzPo: 3,         // po ilu sekundach bez ruchu pokazuje się rączka z podpowiedzią
   mowa: true,              // czy gra mówi, co robić (false = nie mówi)
   glosnosc: 0.5,           // jak głośne są dźwięki (od 0 do 1)
@@ -44,6 +45,7 @@ const KOLORY_PRZEPISOW = {
   zurek: '#c9a46a',
   spaghetti: '#e85d3a',
   lody: '#ff7eb6',
+  gofry: '#e2a14a',
 };
 
 // Karta „Zupy” – po stuknięciu wybierasz jedną z zup
@@ -59,7 +61,7 @@ function kartyKsiazki() {
 const MOJA_KARTA = { id: 'wlasna', nazwa: 'Moja potrawa', porcja: 'wlasna' };
 
 // Krótkie nazwy na kartach wyboru własnej potrawy
-const NAZWY_WLASNYCH = { zupa: 'Zupa', pizza: 'Pizza', nalesniki: 'Naleśniki', salatka: 'Sałatka', sok: 'Sok', spaghetti: 'Spaghetti', lody: 'Lody' };
+const NAZWY_WLASNYCH = { zupa: 'Zupa', pizza: 'Pizza', nalesniki: 'Naleśniki', salatka: 'Sałatka', sok: 'Sok', spaghetti: 'Spaghetti', lody: 'Lody', gofry: 'Gofry' };
 
 const NAJWIECEJ_SKLADNIKOW = 12;   // tyle składników można wrzucić do własnej potrawy
 
@@ -145,6 +147,8 @@ function ulozMiejsca() {
       dzbanek: { x: nx, y: 270 },
       talerz: { x: w * 0.62, y: 640 },
       rozek: { x: nx, y: 465 },
+      gofrownica: { x: w * 0.64, y: 590 },
+      gofr: { x: w * 0.62, y: 640 },
     };
     const dx = w * 0.26;
     M.deska = { x: dx, y: 650 };
@@ -153,7 +157,7 @@ function ulozMiejsca() {
     M.dodatki = { x: dx, y: 660 };
     M.okno = { x: dx - 120, y: 205, w: 240, h: 190 };
     // spiżarnia (własna potrawa): zakładki, a pod nimi 3 rzędy po 4 rzeczy
-    M.zakladki = ZAKLADKI_SPIZARNI.map((z, i) => ({ x: dx + (i - 1.5) * 100, y: 535 }));
+    M.zakladki = ZAKLADKI_SPIZARNI.map((z, i) => ({ x: dx + (i - (ZAKLADKI_SPIZARNI.length - 1) / 2) * 88, y: 535 }));
     M.spizarnia = Array.from({ length: 12 }, (_, i) => ({ x: dx + (i % 4 - 1.5) * 95, y: 610 + Math.floor(i / 4) * 72 }));
     M.gotowe = { x: w - 125, y: 755 };
     // pudełka z lodami i dodatki do lodów: 2 rzędy po 3
@@ -180,6 +184,8 @@ function ulozMiejsca() {
       dzbanek: { x: nx, y: M.blat - 240 },
       talerz: { x: nx, y: M.blat + (h - M.blat) * 0.42 },
       rozek: { x: nx, y: M.blat - 30 },
+      gofrownica: { x: nx, y: M.blat + 60 },
+      gofr: { x: nx, y: M.blat + 10 },
     };
     const dy = M.blat + (h - M.blat) * 0.55;
     M.deska = { x: 400, y: dy };
@@ -187,7 +193,7 @@ function ulozMiejsca() {
     M.przedmiot = { x: 400, y: dy - 20 };
     M.dodatki = { x: 400, y: h - 80 };
     M.okno = { x: 60, y: M.blat - 470, w: 190, h: 160 };
-    M.zakladki = ZAKLADKI_SPIZARNI.map((z, i) => ({ x: 130 + i * 120, y: h - 380 }));
+    M.zakladki = ZAKLADKI_SPIZARNI.map((z, i) => ({ x: 90 + i * 100, y: h - 380 }));
     M.spizarnia = Array.from({ length: 12 }, (_, i) => ({ x: 400 + (i % 4 - 1.5) * 150, y: h - 280 + Math.floor(i / 4) * 95 }));
     M.gotowe = { x: 655, y: h - 385 };
     M.pudelka = [0, 1, 2, 3, 4, 5].map((i) => ({ x: 400 + (i % 3 - 1) * 220, y: h - 290 + Math.floor(i / 3) * 140 }));
@@ -710,7 +716,9 @@ function noweNaczynie(typ) {
     ogien: 0,             // płomyki pod spodem
     wir: 0,               // jak bardzo zakręcone (do fal na zupie)
     goracy: false,        // czy paruje
-    ciasto: typ === 'pizza' ? { r: 0.36 } : typ === 'talerz' ? { r: 0.8 } : null,   // na talerzu: gniazdo makaronu
+    // powierzchnia do smarowania i dodatków: ciasto pizzy, gniazdo makaronu, gofr
+    ciasto: typ === 'pizza' ? { r: 0.36 } : typ === 'talerz' ? { r: 0.8 } : typ === 'gofr' ? { r: 0.62 } : null,
+    gofr: typ === 'gofrownica' ? { ciasto: 0, upieczenie: 0, wieko: 1 } : null,
     galki: [],            // gałki lodów
     posypki: [],          // posypka na lodach
     sos: null,            // sos na lodach
@@ -749,6 +757,7 @@ function nadNaczyniem(x, y) {
     case 'garnek': return Math.abs(x - p.x) < g.R * 1.25 && y > p.y - 200 && y < p.y + 160;
     case 'miska': return Math.abs(x - p.x) < g.R * 1.25 && y > p.y - 200 && y < p.y + 130;
     case 'dzbanek': return Math.abs(x - p.x) < 160 && y > p.y - 210 && y < p.y + 240;
+    case 'gofrownica': return Math.abs(x - p.x) < 220 && y > p.y - 260 && y < p.y + 130;
     default: {
       const dx = (x - p.x) / (g.R * 1.15);
       const dy = (y - p.y) / (g.R * g.e * 1.15 + 40);
@@ -1470,6 +1479,114 @@ MECH.smaz = {
   },
 };
 
+// ---------- GOFROWNICA ----------
+MECH.gofrownica = {
+  start(k) {
+    k.faza = 'czeka';
+    k.t = 0;
+    k.skw = 0;
+    if (!N.gofr) N.gofr = { ciasto: 0, upieczenie: 0, wieko: 1 };
+  },
+  dotyk(k, x, y) {
+    if (!nadNaczyniem(x, y)) return;
+    if (k.faza === 'czeka') {
+      k.faza = 'nalewa';
+      k.t = 0;
+      dzwiekLania();
+    } else if (k.faza === 'zamknij') {
+      k.faza = 'zamyka';
+      k.t = 0;
+      dzwiekKlik();
+    } else if (k.faza === 'otworz') {
+      k.faza = 'otwiera';
+      k.t = 0;
+      dzwiekKlik();
+    }
+  },
+  update(k, dt) {
+    k.t += dt;
+    const g = N.gofr;
+    const p = pozN();
+    if (k.faza === 'nalewa') {
+      g.ciasto = Math.min(1, k.t / 1.1);
+      if (Math.random() < dt * 8) dzwiekLania();
+      if (k.t > 1.3) {
+        k.faza = 'zamknij';
+        const t = 'Zamknij gofrownicę! Stuknij w nią!';
+        ustawNapis(t);
+        powiedz(t);
+        bezczynnosc = 0;
+      }
+    } else if (k.faza === 'zamyka') {
+      g.wieko = Math.max(0, 1 - k.t / 0.45);
+      if (g.wieko <= 0) {
+        k.faza = 'piecze';
+        k.t = 0;
+        dzwiekPlask();
+        ustawNapis('Gofry się pieką…');
+      }
+    } else if (k.faza === 'piecze') {
+      g.upieczenie = Math.min(1, k.t / USTAWIENIA.czasGofrow);
+      if (Math.random() < dt * 5) para(p.x + losowa(-150, 150), p.y - 50);
+      k.skw -= dt;
+      if (k.skw <= 0) {
+        k.skw = losowa(0.08, 0.16);
+        dzwiekSkwierczenia();
+      }
+      if (g.upieczenie >= 1) {
+        k.faza = 'otworz';
+        dzwiekDing();
+        const t = 'Gotowe! Otwórz gofrownicę!';
+        ustawNapis(t);
+        powiedz(t);
+        bezczynnosc = 0;
+      }
+    } else if (k.faza === 'otwiera') {
+      g.wieko = Math.min(1, k.t / 0.45);
+      if (g.wieko >= 1) {
+        k.faza = 'koniec';
+        iskry(p.x, p.y - 20, 14);
+        krokGotowy();
+      }
+    }
+  },
+  rysuj(k) {
+    const p = pozN();
+    if (k.faza === 'piecze') rysujZegarek(p.x + 230, p.y - 120, 32, k.t / USTAWIENIA.czasGofrow);
+    if (k.faza !== 'czeka' && k.faza !== 'nalewa') return;
+    // miska z ciastem przechyla się nad gofrownicą
+    const bx = p.x - 140;
+    const by = p.y - 190;
+    const przechyl = k.faza === 'nalewa' ? Math.min(1, k.t * 3) * 0.9 : 0;
+    const zostalo = k.faza === 'nalewa' ? 1 - Math.min(1, k.t / 1.1) : 1;
+    const miska = noweNaczynie('miska');
+    miska.plyn = 0.5 * zostalo;
+    miska.kolor = przepis.kolor || '#f3dc9b';
+    if (k.faza === 'nalewa' && zostalo > 0.02) {
+      const kx = bx + Math.cos(przechyl) * 64;
+      const ky = by + Math.sin(przechyl) * 64;
+      ctx.strokeStyle = miska.kolor;
+      ctx.lineWidth = 16;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(kx, ky);
+      ctx.quadraticCurveTo(kx + 30, (ky + p.y) / 2, p.x - 10, p.y - 10);
+      ctx.stroke();
+    }
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(przechyl);
+    rysujNaczynie(miska, 0, 0, 0.4, czas);
+    ctx.restore();
+  },
+  podpowiedz(k) {
+    if (!['czeka', 'zamknij', 'otworz'].includes(k.faza)) return null;
+    const p = pozN();
+    return { typ: 'stuk', x: p.x, y: p.y - (k.faza === 'czeka' ? 0 : 30) };
+  },
+};
+
+
 // ---------- MALOWANIE PALCEM (sos, ser, dżem) ----------
 function nowePlotno(rozmiar) {
   const c = document.createElement('canvas');
@@ -1484,7 +1601,18 @@ function stempel(w, g, u, v, r) {
   const px = (u + 1) * S / 2;
   const py = (v + 1) * S / 2;
   const pr = r * S / 2;
-  if (w.styl === 'parmezan') {
+  if (w.sk === 'posypka') {
+    // kolorowa posypka: malutkie pałeczki
+    const kolory = ['#ff5a5f', '#ffd23f', '#3ddc97', '#4cc9f0', '#c77dff', '#ffffff'];
+    for (let i = 0; i < 5; i++) {
+      g.save();
+      g.translate(px + losowa(-1, 1) * pr * 0.9, py + losowa(-1, 1) * pr * 0.9);
+      g.rotate(Math.random() * Math.PI);
+      g.fillStyle = kolory[Math.floor(Math.random() * kolory.length)];
+      g.fillRect(-3, -1, 6, 2.2);
+      g.restore();
+    }
+  } else if (w.styl === 'parmezan') {
     // parmezan na spaghetti: drobne jasne płatki
     for (let i = 0; i < 4; i++) {
       g.fillStyle = i % 2 ? '#fff8e1' : '#f3e3a6';
@@ -1555,6 +1683,7 @@ MECH.smaruj = {
   start(k) {
     // pizza: całe ciasto; spaghetti: środek talerza; naleśnik: prawie cały
     if (N.typ === 'talerz') k.promien = N.ciasto.r * 0.6;
+    else if (N.typ === 'gofr') k.promien = N.ciasto.r * 0.7;   // brzeg gofra zostaje widoczny
     else if (N.ciasto) k.promien = N.ciasto.r * 0.86;
     else k.promien = N.nalesnik ? N.nalesnik.r * 0.78 : 0.7;
     k.w = nowaWarstwa(k.def.skladnik, k.promien, N.typ === 'talerz' && k.def.skladnik === 'ser' ? 'parmezan' : k.def.skladnik);
@@ -1905,8 +2034,20 @@ MECH.wyciskaj = {
 // ---------- WYBÓR (np. czym posmarować naleśnika) ----------
 function miejscaOpcji(ile) {
   const m = V.pion ? { x: 400, y: M.deska.y } : { x: M.deska.x, y: M.deska.y };
-  const odst = V.pion ? 220 : 172;
-  return Array.from({ length: ile }, (_, i) => ({ x: m.x + (i - (ile - 1) / 2) * odst, y: m.y }));
+  if (ile <= 3) {
+    const odst = V.pion ? 220 : 172;
+    return Array.from({ length: ile }, (_, i) => ({ x: m.x + (i - (ile - 1) / 2) * odst, y: m.y }));
+  }
+  // więcej opcji: dwa rzędy (3 na górze, reszta na dole)
+  const odst = V.pion ? 220 : 150;
+  const gora = V.pion ? m.y - 70 : m.y - 68;
+  const dol = V.pion ? m.y + 85 : m.y + 64;
+  return Array.from({ length: ile }, (_, i) => {
+    const rzad = i < 3 ? 0 : 1;
+    const wRz = rzad ? ile - 3 : 3;
+    const k = rzad ? i - 3 : i;
+    return { x: m.x + (k - (wRz - 1) / 2) * odst, y: rzad ? dol : gora };
+  });
 }
 
 function wybierzOpcje(k, opcja) {
@@ -1935,7 +2076,7 @@ MECH.wybierz = {
   },
   dotyk(k, x, y) {
     for (const r of k.opcje) {
-      if (blisko(x, y, r.x, r.y, 75)) {
+      if (blisko(x, y, r.x, r.y, k.opcje.length > 3 ? 60 : 75)) {
         wybierzOpcje(k, r.o);
         return;
       }
@@ -1945,14 +2086,16 @@ MECH.wybierz = {
     for (const r of k.opcje) r.pojaw = Math.min(1, r.pojaw + dt * 3);
   },
   rysuj(k) {
+    const maly = k.opcje.length > 3;
     for (const r of k.opcje) {
-      const wiel = 120 * sprezyna(Math.max(0, r.pojaw));
+      const wiel = (maly ? 92 : 120) * sprezyna(Math.max(0, r.pojaw));
       if (wiel <= 1) continue;
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
-      kolo(r.x, r.y, 74 * sprezyna(Math.max(0, r.pojaw)));
+      kolo(r.x, r.y, (maly ? 56 : 74) * sprezyna(Math.max(0, r.pojaw)));
       ctx.fill();
       rysujSkladnik(r.o.skladnik, r.x, r.y - 6 + Math.sin(czas * 3 + r.x) * 3, wiel * 0.85);
-      napis(SKLADNIKI[r.o.skladnik].nazwa, r.x, r.y + 86, dopasujRozmiarNapisu(SKLADNIKI[r.o.skladnik].nazwa, 160, 20), '#8a4b1c', 'center', '#ffffff');
+      const nazwa = SKLADNIKI[r.o.skladnik].nazwa;
+      napis(nazwa, r.x, r.y + (maly ? 64 : 86), dopasujRozmiarNapisu(nazwa, maly ? 140 : 160, maly ? 17 : 20), '#8a4b1c', 'center', '#ffffff');
     }
     if (k.def.mozeSkonczyc && !k.gotowe) {
       const b = M.gotowe;
@@ -2146,8 +2289,59 @@ function nadCelemDowolnego(x, y) {
   return nadNaczyniem(x, y);
 }
 
+// Krem, miód, cukier puder... na płaskim jedzeniu (pizza, gofr, naleśnik) robią plamę
+function maznij(sk, uv) {
+  let w = N.warstwy.find((q) => q.sk === sk && q.zDowolnego);
+  if (!w) {
+    w = nowaWarstwa(sk, 0.9);
+    w.zDowolnego = true;
+    N.warstwy.push(w);
+  }
+  for (let i = 0; i < 7; i++) stempel(w, w.g, uv.u + losowa(-0.12, 0.12), uv.v + losowa(-0.1, 0.1), 0.15);
+  dzwiekSmarowania();
+}
+
 function dodajDowolny(sk, x, y) {
   const d = SKLADNIKI[sk];
+  if (d.sloik && N.typ === 'rozek') {
+    // na lodach: krem i miód to polewa, cukier i posypka to posypka
+    if (sk === 'cukier' || sk === 'posypka') {
+      const n = N.galki.length;
+      for (let i = 0; i < 18; i++) {
+        N.posypki.push({ i: Math.max(0, n - 1 - Math.floor(Math.random() * Math.random() * n)), a: Math.random() * Math.PI * 2, d: Math.sqrt(Math.random()) * 0.85, obrot: Math.random() * Math.PI, kolor: sk === 'cukier' ? '#ffffff' : KOLORY_POSYPKI[i % KOLORY_POSYPKI.length] });
+      }
+      dzwiekSypania();
+    } else {
+      N.sos = d.kolor;
+      dzwiekLania();
+    }
+    const g = pozycjaGalki(Math.max(0, N.galki.length - 1));
+    iskry(g.x, g.y, 5);
+    return;
+  }
+  if (d.sloik && (N.ciasto || N.typ === 'patelnia')) {
+    let uv = naUV(x, y);
+    const r = (N.ciasto ? N.ciasto.r : N.nalesnik.r) * 0.6;
+    const l = Math.hypot(uv.u, uv.v);
+    if (l > r) uv = { u: uv.u / l * r, v: uv.v / l * r };
+    maznij(sk, uv);
+    return;
+  }
+  if (d.sloik && N.typ !== 'dzbanek') {
+    if (N.plyn > 0.05 && N.kolor) {
+      // w zupie: zabarwia płyn
+      N.kolor = mieszajKolory(N.kolor, d.kolor, 0.3);
+      chlupnij();
+    } else {
+      // w sałatce: polewa z wierzchu
+      const punkty = [];
+      const start = Math.random() * Math.PI * 2;
+      for (let i = 0; i < 9; i++) punkty.push([Math.cos(start + i * 0.7) * (0.2 + i * 0.05), Math.sin(start + i * 1.3) * 0.5]);
+      N.polewa.push({ kolor: d.kolor, punkty });
+      dzwiekLania();
+    }
+    return;
+  }
   if (N.typ === 'rozek') {
     // na lodach: przyklejamy do gałki (najczęściej do górnej)
     const n = N.galki.length;
@@ -2353,6 +2547,7 @@ function skladnikiPrzepisu(p) {
 function wybierzPrzepis(p) {
   // kopia, bo w czasie gotowania przepis się zmienia (np. wybrane dodatki do naleśnika)
   przepis = JSON.parse(JSON.stringify(p));
+  if (przepis.kroki.some((k) => k.co === 'wybierz')) przepis.wybrane = [];   // dodatki wybierzesz sam
   ekran = 'wstep';
   zaslona = 1;
   bezczynnosc = 0;
@@ -2940,6 +3135,7 @@ function ikonaKroku(def) {
     case 'wybierz': return '✨';
     case 'galki': return '🍨';
     case 'dekoruj': return '🍒';
+    case 'gofrownica': return '🧇';
     default: return SKLADNIKI[def.skladnik].obrazek;
   }
 }
@@ -3017,7 +3213,7 @@ function rysujGotowanie() {
   rysujOkno(M.okno.x, M.okno.y, M.okno.w, M.okno.h);
   rysujPolke(M.polkaDeko.x, M.polkaDeko.y, M.polkaDeko.w);
   rysujPodgladacza();
-  if (!['pizza', 'talerz', 'rozek'].includes(N.typ) && !przepis.wlasny && przepis.id !== 'spaghetti') rysujDeske(M.deska.x, M.deska.y + 24);
+  if (!['pizza', 'talerz', 'rozek', 'gofrownica', 'gofr'].includes(N.typ) && !przepis.wlasny && przepis.id !== 'spaghetti') rysujDeske(M.deska.x, M.deska.y + 24);
   if (potrzebnaKuchenka()) {
     const p = pokretlo();
     const podswietl = K && K.def.co === 'gotuj' && K.faza === 'czeka' ? 0.6 + Math.sin(czas * 6) * 0.4 : 0;
@@ -3123,7 +3319,7 @@ function rysujStol() {
   // garnek z potrawą
   const d = M.danie;
   if (N.typ === 'rozek') rysujNaczynie(N, d.x, d.y - 10, d.s * 0.75, czas);   // wysoki rożek – trochę mniejszy
-  else rysujNaczynie(N, d.x, d.y - (N.typ === 'pizza' || N.typ === 'talerz' ? 0 : 60), d.s, czas);
+  else rysujNaczynie(N, d.x, d.y - (['pizza', 'talerz', 'gofr'].includes(N.typ) ? 0 : 60), d.s, czas);
   if (N.goracy && Math.random() < 0.05) para(d.x + losowa(-40, 40), d.y - 80);
   rysujLecace();
 }

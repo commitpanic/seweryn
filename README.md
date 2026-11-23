@@ -109,7 +109,8 @@ Przepisy:
 - **Zupy** (5 najpopularniejszych w Polsce): pomidorowa, rosół, ogórkowa, barszcz czerwony i żurek,
 - **naleśniki**: na koniec wybierasz, czym je posmarować: dżem, krem czekoladowy, cukier puder (można wszystko po kolei),
 - **sałatka owocowa**, **pizza**, **spaghetti** z sosem, parmezanem i klopsikami, **sok pomarańczowy**,
-- **lody**: wybierasz do 3 gałek (6 smaków), a potem dekorujesz posypką, sosem, wisienką i wafelkiem.
+- **lody**: wybierasz do 3 gałek (6 smaków), a potem dekorujesz posypką, sosem, wisienką i wafelkiem,
+- **gofry**: robisz ciasto, wylewasz je do gofrownicy, zamykasz ją, a kiedy zadzwoni, otwierasz. Potem wybierasz dodatki: bitą śmietanę, truskawki, jagody, krem czekoladowy, cukier puder (można kilka).
 
 | Co robisz | Jak |
 |---|---|
@@ -122,11 +123,11 @@ Przepisy:
 
 | Klawisze | Co robią |
 |---|---|
-| `1` – `8` | wybór karty w książce (`1` to Zupy, `8` to Moja potrawa) |
+| `1` – `9` | wybór karty w książce (`1` to Zupy, `9` to Moja potrawa) |
 | `Esc` / `Q` | powrót do książki / do menu gier |
 | `M` | wycisz dźwięk i mowę |
 
-**Moja potrawa** (ostatnia karta w książce): wybierasz, co gotujesz (zupę, pizzę, naleśniki, sałatkę, spaghetti, sok albo lody), a potem bierzesz ze spiżarni, co tylko chcesz, i stukasz **Gotowe**. Spiżarnia ma zakładki: 🥕 warzywa, 🍎 owoce, 🧀 inne (ser, kiełbasa, klopsiki, makaron, krem…) i 🧦 śmieszne rzeczy (skarpetka, but, szalik, kartka papieru, kredka, miś, piłka). Ale uwaga: jak smaki do siebie nie pasują, przyjaciele się krzywią i mówią „bleee!”. Dziwne jest na przykład:
+**Moja potrawa** (ostatnia karta w książce): wybierasz, co gotujesz (zupę, pizzę, naleśniki, sałatkę, gofry, spaghetti, sok albo lody), a potem bierzesz ze spiżarni, co tylko chcesz, i stukasz **Gotowe**. Spiżarnia ma zakładki: 🥕 warzywa, 🍎 owoce, 🧀 inne (ser, kiełbasa, klopsiki, makaron…), 🍰 słodkie (krem czekoladowy, miód, cukier puder, bita śmietana, posypka, wisienka) i 🧦 śmieszne rzeczy (skarpetka, but, szalik, kartka papieru, kredka, miś, piłka). Ale uwaga: jak smaki do siebie nie pasują, przyjaciele się krzywią i mówią „bleee!”. Dziwne jest na przykład:
   - owoce w zupie albo na pizzy („Banan na pizzy? Dziwne!”),
   - słone rzeczy w soku (ale sok marchewkowy i pomidorowy jest OK),
   - słodkie razem ze słonym („Truskawka i salami? Dziwne połączenie!”),

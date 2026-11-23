@@ -20,6 +20,8 @@ const NACZYNIA = {
   dzbanek:  { R: 92,  e: 0.3,  doNazwa: 'do dzbanka', wielkoscKawalka: 46 },
   talerz:   { R: 170, e: 0.62, doNazwa: 'na talerz', wielkoscKawalka: 50 },
   rozek:    { R: 60,  e: 0.4,  doNazwa: 'na rożek', wielkoscKawalka: 40 },
+  gofrownica: { R: 150, e: 0.6, doNazwa: 'do gofrownicy', wielkoscKawalka: 40 },
+  gofr:     { R: 170, e: 0.62, doNazwa: 'na gofra', wielkoscKawalka: 50 },
 };
 
 
@@ -648,6 +650,31 @@ const RYSUNKI = {
     ctx.restore();
   },
 
+  // kleks bitej śmietany
+  bitaSmietana() {
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    elipsa(0, 34, 40, 8);
+    ctx.fill();
+    const warstwy = [[0, 22, 38, 16], [0, 6, 31, 14], [2, -8, 23, 12], [4, -21, 14, 10]];
+    for (const [x, y, rx, ry] of warstwy) {
+      ctx.fillStyle = '#ffffff';
+      elipsa(x, y, rx, ry);
+      ctx.fill();
+      ctx.strokeStyle = '#e3e8ee';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(x, y, rx, ry, 0, 0.1, Math.PI - 0.1);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(-6, -26);
+    ctx.quadraticCurveTo(10, -36, 12, -44);
+    ctx.quadraticCurveTo(14, -30, 10, -22);
+    ctx.closePath();
+    ctx.fill();
+  },
+
   // wałek do ciasta
   walek() {
     ctx.save();
@@ -935,8 +962,199 @@ function rysujNaczynie(n, x, y, s = 1, czas = 0) {
     case 'dzbanek': rysujDzbanek(n, czas); break;
     case 'talerz': rysujTalerz(n); break;
     case 'rozek': rysujRozek(n, czas); break;
+    case 'gofrownica': rysujGofrownice(n); break;
+    case 'gofr': rysujGofr(n); break;
   }
   ctx.restore();
+}
+
+// Gofr (prostokąt w kratkę). (0, 0) to środek, w i h to wymiary.
+function ksztaltGofra(w, h) {
+  zaokraglony(-w / 2, -h / 2, w, h, Math.min(w, h) * 0.14);
+}
+
+function kratkaGofra(w, h, kolor, upieczenie = 1) {
+  ctx.save();
+  ksztaltGofra(w, h);
+  ctx.fillStyle = kolor;
+  ctx.fill();
+  ctx.clip();
+  const kol = 5;
+  const rz = 4;
+  const kw = w / kol;
+  const kh = h / rz;
+  ctx.fillStyle = przyciemnij(kolor, 0.82 + 0.1 * (1 - upieczenie));
+  for (let i = 0; i < kol; i++) {
+    for (let j = 0; j < rz; j++) {
+      zaokraglony(-w / 2 + i * kw + kw * 0.16, -h / 2 + j * kh + kh * 0.16, kw * 0.68, kh * 0.68, Math.min(kw, kh) * 0.12);
+      ctx.fill();
+    }
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.fillRect(-w / 2, -h / 2, w, h * 0.12);
+  ctx.restore();
+}
+
+// Gofrownica. n.gofr = { ciasto: 0..1 (ile ciasta), upieczenie: 0..1, wieko: 1 = otwarta, 0 = zamknięta }
+function rysujGofrownice(n) {
+  const g = n.gofr || { ciasto: 0, upieczenie: 0, wieko: 1 };
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  elipsa(0, 108, 190, 18);
+  ctx.fill();
+  // rączka z boku
+  ctx.fillStyle = '#2d2b35';
+  zaokraglony(160, 30, 70, 24, 12);
+  ctx.fill();
+  // spód
+  const gora = (dy = 0) => {
+    ctx.beginPath();
+    ctx.moveTo(-150, -60 + dy);
+    ctx.lineTo(150, -60 + dy);
+    ctx.lineTo(170, 60 + dy);
+    ctx.lineTo(-170, 60 + dy);
+    ctx.closePath();
+  };
+  ctx.fillStyle = '#a93226';
+  zaokraglony(-170, 55, 340, 48, 14);
+  ctx.fill();
+  gora();
+  ctx.fillStyle = '#d64541';
+  ctx.fill();
+  // płyta z kratką i ciasto
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(-122, -46);
+  ctx.lineTo(122, -46);
+  ctx.lineTo(138, 46);
+  ctx.lineTo(-138, 46);
+  ctx.closePath();
+  ctx.fillStyle = '#3b3f4c';
+  ctx.fill();
+  ctx.clip();
+  ctx.strokeStyle = '#2a2d36';
+  ctx.lineWidth = 6;
+  for (let i = -4; i <= 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 30, -50);
+    ctx.lineTo(i * 34, 50);
+    ctx.stroke();
+  }
+  for (const y of [-22, 0, 22]) {
+    ctx.beginPath();
+    ctx.moveTo(-140, y);
+    ctx.lineTo(140, y);
+    ctx.stroke();
+  }
+  if (g.ciasto > 0.01) {
+    ctx.save();
+    ctx.scale(1, 0.62);
+    ctx.globalAlpha = Math.min(1, g.ciasto * 1.3);
+    const kolor = mieszajKolory('#f7e3a1', '#e2a14a', g.upieczenie);
+    const sk = 0.4 + 0.6 * g.ciasto;
+    ctx.scale(sk, sk);
+    kratkaGofra(270, 150, kolor, g.upieczenie);
+    ctx.restore();
+  }
+  ctx.restore();
+  // lampka
+  ctx.fillStyle = g.upieczenie >= 1 ? '#3ddc97' : g.wieko < 0.5 ? '#ff5a2e' : '#7a7f8c';
+  kolo(-130, 80, 8);
+  ctx.fill();
+  // wieko: przy zawiasie z tyłu; dalszy brzeg jedzie od góry (otwarte) do przodu (zamknięte)
+  const brzeg = 70 + (-240 - 70) * g.wieko;
+  const zewnatrz = brzeg > -60;   // widać wierzch wieka (zamknięte albo prawie)
+  ctx.beginPath();
+  ctx.moveTo(-150, -62);
+  ctx.lineTo(150, -62);
+  const szer = zewnatrz ? 170 : 150 - (g.wieko - 0.5) * 20;
+  ctx.lineTo(szer, brzeg - (zewnatrz ? 12 : 0));
+  ctx.lineTo(-szer, brzeg - (zewnatrz ? 12 : 0));
+  ctx.closePath();
+  ctx.fillStyle = zewnatrz ? '#e74c3c' : '#c0392b';
+  ctx.fill();
+  if (!zewnatrz) {
+    // wnętrze wieka z kratką
+    ctx.save();
+    ctx.clip();
+    ctx.fillStyle = '#3b3f4c';
+    ctx.beginPath();
+    ctx.moveTo(-124, -70);
+    ctx.lineTo(124, -70);
+    ctx.lineTo(124, brzeg + 14);
+    ctx.lineTo(-124, brzeg + 14);
+    ctx.closePath();
+    ctx.fill();
+    // kratka w wieku (z niej robią się kwadraciki na gofrze)
+    ctx.strokeStyle = '#2a2d36';
+    ctx.lineWidth = 6;
+    const wys = -70 - (brzeg + 14);
+    for (let i = -4; i <= 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * 29, -70);
+      ctx.lineTo(i * 29, brzeg + 14);
+      ctx.stroke();
+    }
+    for (let j = 1; j <= 3; j++) {
+      ctx.beginPath();
+      ctx.moveTo(-124, -70 - wys * j / 4);
+      ctx.lineTo(124, -70 - wys * j / 4);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else {
+    // wierzch wieka: wytłoczona kratka i serduszko
+    ctx.save();
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(150, 30, 20, 0.35)';
+    ctx.lineWidth = 4;
+    for (let i = -4; i <= 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * 34, -62);
+      ctx.lineTo(i * 38, brzeg);
+      ctx.stroke();
+    }
+    ctx.restore();
+    rysujSerce(0, (brzeg - 62) / 2, 14, '#ffd6d1');
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fillRect(-120, -56, 240, 10);
+    // uchwyt wieka z przodu
+    ctx.fillStyle = '#2d2b35';
+    zaokraglony(-46, brzeg - 4, 92, 18, 9);
+    ctx.fill();
+  }
+}
+
+// Gofr na talerzu (do dodatków)
+function rysujGofr(n) {
+  const R = 170, e = 0.62;
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  elipsa(6, 16, R + 4, R * e + 4);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  elipsa(0, 0, R, R * e);
+  ctx.fill();
+  ctx.strokeStyle = '#dfe6ee';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.strokeStyle = '#8fd0f5';
+  ctx.lineWidth = 3;
+  elipsa(0, 0, R * 0.8, R * e * 0.8);
+  ctx.stroke();
+  const w = R * 1.3;
+  const h = R * e * 1.35;
+  ctx.fillStyle = 'rgba(120, 70, 20, 0.25)';
+  ctx.save();
+  ctx.translate(4, 8);
+  ksztaltGofra(w, h);
+  ctx.fill();
+  ctx.restore();
+  kratkaGofra(w, h, '#e8a94f');
+  ctx.save();
+  ksztaltGofra(w, h);
+  ctx.clip();
+  rysujWarstwy(n, R, e, 0);
+  ctx.restore();
+  for (const d of n.dodatki) rysujObrazek(SKLADNIKI[d.sk].obrazek, d.u * R, d.v * R * e - 8, 52, d.obrot);
 }
 
 // Gniazdo makaronu spaghetti – rysujemy je raz na osobnym płótnie (współrzędne od -1 do 1)
@@ -1870,6 +2088,7 @@ function rysujPorcje(p, x, y, s, zostalo) {
     case 'wlasna': porcjaWlasna(); break;
     case 'spaghetti': porcjaSpaghetti(zostalo); break;
     case 'lody': porcjaLody(p, zostalo); break;
+    case 'gofr': porcjaGofr(p, zostalo); break;
   }
   ctx.restore();
 }
@@ -1958,6 +2177,37 @@ function porcjaSpaghetti(zostalo) {
     ctx.stroke();
   }
   rysujObrazek('*pulpet', -4, -12, 24);
+  ctx.restore();
+}
+
+function porcjaGofr(p, zostalo) {
+  talerz();
+  if (zostalo <= 0.01) return;
+  const k = 0.45 + 0.55 * zostalo;
+  ctx.save();
+  ctx.translate(0, -16);
+  ctx.scale(k, k);
+  kratkaGofra(100, 40, '#e8a94f');
+  const wybrane = p.wybrane || [];
+  if (wybrane.includes('krem')) {
+    ctx.strokeStyle = '#5a3220';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= 6; i++) ctx.lineTo(-40 + i * 13, -6 + (i % 2 ? 8 : -6));
+    ctx.stroke();
+  }
+  if (wybrane.includes('cukier')) {
+    const los = losowaZNasiona(9);
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    for (let i = 0; i < 36; i++) {
+      kolo(-46 + los() * 92, -18 + los() * 36, 1.6);
+      ctx.fill();
+    }
+  }
+  const miejsca = [[-26, -8], [4, -14], [28, -6]];
+  const lista = p.wlasny ? (p.wPorcji || []) : wybrane.filter((sk) => ['bitaSmietana', 'truskawka', 'jagody'].includes(sk));
+  lista.slice(0, 3).forEach((sk, i) => rysujObrazek(SKLADNIKI[sk].obrazek, miejsca[i][0], miejsca[i][1] - 8, sk === 'bitaSmietana' ? 36 : 28, (i - 1) * 0.3));
   ctx.restore();
 }
 

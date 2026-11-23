@@ -26,6 +26,7 @@
 //               opcje: lista { skladnik, krok } – krok to, co się potem robi
 //   galki     – nakładasz gałki lodów (stukasz w pudełka)
 //   dekoruj   – posypujesz i dekorujesz lody
+//   gofrownica – wylewasz ciasto do gofrownicy, zamykasz ją i otwierasz, kiedy dzwoni
 //
 //  naczynie przy kroku – zmienia naczynie (np. makaron z garnka na talerz)
 //  grupa: 'zupy' – przepis jest w książce pod kartą „Zupy”
@@ -38,6 +39,7 @@
 // kolor: jaki kolor ma sok / kawałki tego składnika
 // nazwa: jak się nazywa (gra mówi ją, gdy wrzucisz coś nie tak)
 // rodzaj: 'plyn' (wlewa się), 'polewa' (polewa wierzch), 'sypkie' (sypie się)
+// sloik: to się nakłada łyżką albo sypie (w Mojej potrawie robi plamę albo polewę, a nie leży w całości)
 const SKLADNIKI = {
   pomidor:    { obrazek: '🍅', kolor: '#e8432e', nazwa: 'Pomidor' },
   marchewka:  { obrazek: '🥕', kolor: '#f28b1e', nazwa: 'Marchewka' },
@@ -56,7 +58,7 @@ const SKLADNIKI = {
   ser:        { obrazek: '🧀', kolor: '#ffd447', nazwa: 'Ser' },
   jajko:      { obrazek: '🥚', kolor: '#fff6d8', nazwa: 'Jajko' },
   mleko:      { obrazek: '🥛', kolor: '#fbfbf6', nazwa: 'Mleko', rodzaj: 'plyn' },
-  miod:       { obrazek: '🍯', kolor: '#f2b33d', nazwa: 'Miód', rodzaj: 'polewa' },
+  miod:       { obrazek: '🍯', kolor: '#f2b33d', nazwa: 'Miód', rodzaj: 'polewa', sloik: true },
   lod:        { obrazek: '🧊', kolor: '#d8f3ff', nazwa: 'Lód' },
   chleb:      { obrazek: '🍞', kolor: '#e0a85a', nazwa: 'Chleb' },
   woda:       { obrazek: '*woda', kolor: '#c4e9f8', nazwa: 'Woda', rodzaj: 'plyn' },
@@ -73,13 +75,14 @@ const SKLADNIKI = {
   kielbasa:   { obrazek: '*kielbasa', kolor: '#b5533c', nazwa: 'Kiełbasa' },
   jajkoGot:   { obrazek: '*jajkoGot', kolor: '#fff6d8', nazwa: 'Jajko na twardo' },
   makaron:    { obrazek: '*makaron', kolor: '#f2d06b', nazwa: 'Makaron' },
-  smietana:   { obrazek: '*smietana', kolor: '#fffaf0', nazwa: 'Śmietana', rodzaj: 'plyn' },
+  smietana:   { obrazek: '*smietana', kolor: '#fffaf0', nazwa: 'Śmietana', rodzaj: 'plyn', sloik: true },
   pulpet:     { obrazek: '*pulpet', kolor: '#8a4b2a', nazwa: 'Klopsik' },
-  krem:       { obrazek: '*krem', kolor: '#5a3220', nazwa: 'Krem czekoladowy' },
-  cukier:     { obrazek: '*cukier', kolor: '#ffffff', nazwa: 'Cukier puder' },
+  krem:       { obrazek: '*krem', kolor: '#5a3220', nazwa: 'Krem czekoladowy', sloik: true },
+  cukier:     { obrazek: '*cukier', kolor: '#ffffff', nazwa: 'Cukier puder', sloik: true },
+  bitaSmietana: { obrazek: '*bitaSmietana', kolor: '#ffffff', nazwa: 'Bita śmietana' },
 
   // Dodatki do lodów
-  posypka:     { obrazek: '*posypka', nazwa: 'Kolorowa posypka' },
+  posypka:     { obrazek: '*posypka', kolor: '#ff7eb6', nazwa: 'Kolorowa posypka', sloik: true },
   posypkaCzek: { obrazek: '*posypkaCzek', nazwa: 'Czekoladowa posypka' },
   sosCzek:     { obrazek: '*sosCzek', kolor: '#5a3220', nazwa: 'Sos czekoladowy' },
   sosTrusk:    { obrazek: '*sosTrusk', kolor: '#e8304a', nazwa: 'Sos truskawkowy' },
@@ -262,6 +265,34 @@ const PRZEPISY = [
     ],
   },
   {
+    id: 'gofry',
+    nazwa: 'Gofry',
+    naczynie: 'miska',
+    porcja: 'gofr',
+    kolor: '#f3dc9b',
+    wybrane: ['bitaSmietana', 'truskawka'],   // tak wyglądają na karcie w książce
+    kroki: [
+      { co: 'jajko', skladnik: 'jajko', ile: 3, tekst: 'Rozbij jajko. Stukaj w nie!' },
+      { co: 'polej', skladnik: 'mleko', tekst: 'Wlej mleko do miski' },
+      { co: 'polej', skladnik: 'maka', tekst: 'Wsyp mąkę' },
+      { co: 'mieszaj', ile: 3, tekst: 'Wymieszaj ciasto', przybor: 'trzepaczka' },
+      { co: 'gofrownica', naczynie: 'gofrownica', tekst: 'Wylej ciasto do gofrownicy. Stuknij w nią!' },
+      {
+        co: 'wybierz',
+        naczynie: 'gofr',
+        tekst: 'Co położyć na gofrze? Wybierz!',
+        tekstPotem: 'Coś jeszcze? Wybierz albo stuknij Gotowe',
+        opcje: [
+          { skladnik: 'bitaSmietana', krok: { co: 'uloz', skladnik: 'bitaSmietana', ile: 3, tekst: 'Połóż bitą śmietanę. Stukaj w gofra!' } },
+          { skladnik: 'truskawka', krok: { co: 'uloz', skladnik: 'truskawka', ile: 4, tekst: 'Połóż truskawki. Stukaj w gofra!' } },
+          { skladnik: 'jagody', krok: { co: 'uloz', skladnik: 'jagody', ile: 4, tekst: 'Połóż jagody. Stukaj w gofra!' } },
+          { skladnik: 'krem', krok: { co: 'smaruj', skladnik: 'krem', tekst: 'Posmaruj gofra kremem czekoladowym!' } },
+          { skladnik: 'cukier', krok: { co: 'smaruj', skladnik: 'cukier', tekst: 'Posyp gofra cukrem pudrem. Maluj palcem!' } },
+        ],
+      },
+    ],
+  },
+  {
     id: 'spaghetti',
     nazwa: 'Spaghetti',
     naczynie: 'garnek',
@@ -314,7 +345,7 @@ const PRZYJACIELE = [
   { typ: 'panda', imie: 'Panda', glos: 0.9, mowi: 'Pycha!', ulubione: ['jablko', 'pistacjowe', 'ogorek'] },
   { typ: 'jez', imie: 'Jeżyk', glos: 1.6, mowi: 'Mniam, mniam!', ulubione: ['pieczarka', 'jagody', 'jagodowe', 'jablko'] },
   { typ: 'malpka', imie: 'Małpka', glos: 1.8, mowi: 'Pyszne!', ulubione: ['banan', 'czekoladowe', 'krem'] },
-  { typ: 'kotek', imie: 'Kotek', glos: 1.5, mowi: 'Dziękuję!', ulubione: ['smietana', 'mleko', 'ser', 'waniliowe'] },
+  { typ: 'kotek', imie: 'Kotek', glos: 1.5, mowi: 'Dziękuję!', ulubione: ['smietana', 'bitaSmietana', 'mleko', 'ser', 'waniliowe'] },
   { typ: 'piesek', imie: 'Piesek', glos: 1.2, mowi: 'Super!', ulubione: ['kielbasa', 'pulpet', 'kurczak', 'salami', 'truskawkowe'] },
 ];
 
@@ -335,7 +366,7 @@ const SMAKI = {
   jajkoGot: 'slony',
   banan: 'slodki', jablko: 'slodki', truskawka: 'slodki', jagody: 'slodki',
   winogrona: 'slodki', pomarancza: 'slodki', cytryna: 'slodki', gruszka: 'slodki',
-  krem: 'slodki', miod: 'slodki',
+  krem: 'slodki', miod: 'slodki', cukier: 'slodki', bitaSmietana: 'slodki', posypka: 'slodki', wisienka: 'slodki',
   ser: 'neutralny', chleb: 'neutralny', makaron: 'neutralny', smietana: 'neutralny',
   lod: 'zimny',
 };
@@ -347,7 +378,8 @@ const DO_SOKU_TEZ = ['pomidor', 'marchewka', 'burak'];
 const ZAKLADKI_SPIZARNI = [
   { ikona: '🥕', nazwa: 'Warzywa', skladniki: ['pomidor', 'marchewka', 'ziemniak', 'ogorek', 'brokul', 'pieczarka', 'burak', 'cebula', 'czosnek', 'pietruszka'] },
   { ikona: '🍎', nazwa: 'Owoce', skladniki: ['banan', 'jablko', 'truskawka', 'jagody', 'winogrona', 'pomarancza', 'gruszka', 'cytryna'] },
-  { ikona: '🧀', nazwa: 'Inne', skladniki: ['ser', 'salami', 'kielbasa', 'kurczak', 'pulpet', 'jajkoGot', 'makaron', 'chleb', 'smietana', 'krem', 'miod', 'lod'] },
+  { ikona: '🧀', nazwa: 'Inne', skladniki: ['ser', 'salami', 'kielbasa', 'kurczak', 'pulpet', 'jajkoGot', 'makaron', 'chleb', 'smietana', 'lod'] },
+  { ikona: '🍰', nazwa: 'Słodkie', skladniki: ['krem', 'miod', 'cukier', 'bitaSmietana', 'posypka', 'wisienka'] },
   { ikona: '🧦', nazwa: 'Śmieszne rzeczy', skladniki: ['skarpetka', 'but', 'szalik', 'kartka', 'kredka', 'mis', 'pilka'] },
 ];
 
@@ -402,6 +434,14 @@ const WLASNE = [
       { co: 'gotuj', tekst: 'Włącz kuchenkę' },
       { co: 'smaruj', skladnik: 'sos', naczynie: 'talerz', tekst: 'Polej makaron sosem. Maluj palcem!' },
       { co: 'dowolne', tekst: 'Połóż na makaronie, co chcesz!' },
+    ],
+  },
+  {
+    typ: 'gofry', nazwa: 'Moje gofry', naczynie: 'gofrownica', porcja: 'gofr', kolor: '#f3dc9b',
+    gdzie: 'na gofrze', smak: 'slodki',
+    kroki: [
+      { co: 'gofrownica', tekst: 'Wylej ciasto do gofrownicy. Stuknij w nią!' },
+      { co: 'dowolne', naczynie: 'gofr', tekst: 'Połóż na gofrze, co chcesz!' },
     ],
   },
   {
