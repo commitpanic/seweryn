@@ -6,7 +6,7 @@
 // =====================================================
 
 const plotno = document.getElementById('gra');
-const ctx = plotno.getContext('2d');
+let ctx = plotno.getContext('2d');   // „let”, bo czasem rysujemy na chwilę na innym płótnie
 
 const CZCIONKA = '"Chalkboard SE", "Comic Sans MS", "Segoe UI", system-ui, sans-serif';
 const CZCIONKA_EMOJI = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
@@ -18,6 +18,8 @@ const NACZYNIA = {
   patelnia: { R: 140, e: 0.5,  doNazwa: 'na patelnię', wielkoscKawalka: 50 },
   pizza:    { R: 175, e: 0.72, doNazwa: 'na pizzę', wielkoscKawalka: 50 },
   dzbanek:  { R: 92,  e: 0.3,  doNazwa: 'do dzbanka', wielkoscKawalka: 46 },
+  talerz:   { R: 170, e: 0.62, doNazwa: 'na talerz', wielkoscKawalka: 50 },
+  rozek:    { R: 60,  e: 0.4,  doNazwa: 'na rożek', wielkoscKawalka: 40 },
 };
 
 
@@ -110,10 +112,23 @@ function emotka(e) {
   c.width = B;
   c.height = B;
   const g = c.getContext('2d');
-  g.font = `116px ${CZCIONKA_EMOJI}`;
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.fillText(e, B / 2, B / 2 + 6);
+  if (e[0] === '*') {
+    // nasz własny rysunek – rysujemy go na tym małym płótnie, żeby dało się go kroić jak emotkę
+    const f = RYSUNKI[e.slice(1)];
+    const stary = ctx;
+    ctx = g;
+    ctx.save();
+    ctx.translate(B / 2, B / 2);
+    ctx.scale(1.16, 1.16);
+    if (f) f();
+    ctx.restore();
+    ctx = stary;
+  } else {
+    g.font = `116px ${CZCIONKA_EMOJI}`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(e, B / 2, B / 2 + 6);
+  }
   // Szukamy, gdzie naprawdę jest obrazek (żeby dobrze go wyśrodkować i pokroić)
   let x0 = B, y0 = B, x1 = -1, y1 = -1;
   try {
@@ -168,11 +183,6 @@ function rysujPlasterek(e, czesc, z, x, y, wielkosc, dx = 0, obrot = 0, alfa = 1
 
 // Kawałek leżący osobno (np. w garnku): plasterek przesunięty tak, żeby jego środek był w (x, y)
 function rysujKawalek(e, czesc, z, x, y, wielkosc, obrot = 0, alfa = 1) {
-  if (e[0] === '*') {
-    // rysunek (np. salami) – nie kroimy go, tylko rysujemy trochę mniejszy
-    rysujObrazek(e, x, y, wielkosc * 0.75, obrot, alfa);
-    return;
-  }
   if (czesc < 0) {
     rysujEmotke(e, x, y, wielkosc, obrot, alfa);
     return;
@@ -408,6 +418,236 @@ const RYSUNKI = {
     ctx.fill();
   },
 
+  // burak z liśćmi
+  burak() {
+    ctx.strokeStyle = '#c2185b';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    for (const [x, y] of [[-16, -46], [0, -52], [16, -46]]) {
+      ctx.beginPath();
+      ctx.moveTo(0, -20);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#4caf50';
+    for (const [x, y, o] of [[-20, -50, -0.6], [0, -58, 0], [20, -50, 0.6]]) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, 9, 16, o, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = '#7a1530';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 40);
+    ctx.quadraticCurveTo(4, 50, 10, 56);
+    ctx.stroke();
+    ctx.fillStyle = '#9b1b3f';
+    elipsa(0, 8, 36, 34);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    elipsa(-12, -4, 9, 12);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(80, 0, 30, 0.35)';
+    ctx.lineWidth = 2;
+    for (const yy of [0, 14, 26]) {
+      ctx.beginPath();
+      ctx.moveTo(-20, yy);
+      ctx.quadraticCurveTo(0, yy + 5, 20, yy);
+      ctx.stroke();
+    }
+  },
+
+  // kiełbasa
+  kielbasa() {
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#7d3324';
+    ctx.lineWidth = 34;
+    ctx.beginPath();
+    ctx.moveTo(-34, 16);
+    ctx.quadraticCurveTo(0, -36, 34, 16);
+    ctx.stroke();
+    ctx.strokeStyle = '#c0603f';
+    ctx.lineWidth = 27;
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255, 220, 190, 0.45)';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(-26, 4);
+    ctx.quadraticCurveTo(0, -30, 26, 4);
+    ctx.stroke();
+    ctx.fillStyle = '#f2c9a8';
+    for (const [x, y] of [[-20, 14], [-6, -4], [10, -2], [22, 12]]) {
+      kolo(x, y, 2.5);
+      ctx.fill();
+    }
+  },
+
+  // jajko na twardo (bez skorupki) – po przekrojeniu widać żółtko
+  jajkoGot() {
+    elipsa(0, 0, 32, 42);
+    ctx.fillStyle = '#fffdf5';
+    ctx.fill();
+    ctx.strokeStyle = '#e6dccb';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = '#ffc02e';
+    kolo(0, 6, 17);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    elipsa(-10, -18, 7, 10);
+    ctx.fill();
+  },
+
+  // makaron spaghetti związany wstążką
+  makaron() {
+    ctx.lineCap = 'round';
+    for (let i = -4; i <= 4; i++) {
+      ctx.strokeStyle = i % 2 ? '#e8c055' : '#f6d77a';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(i * 3.5, 44);
+      ctx.lineTo(i * 6.5, -46);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#e25b45';
+    zaokraglony(-17, 4, 34, 12, 4);
+    ctx.fill();
+  },
+
+  // kubeczek śmietany (wylewa się z prawego górnego rogu)
+  smietana() {
+    ctx.beginPath();
+    ctx.moveTo(-30, -34);
+    ctx.lineTo(30, -34);
+    ctx.lineTo(24, 42);
+    ctx.lineTo(-24, 42);
+    ctx.closePath();
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = '#c9d6e3';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = '#4ea5d3';
+    ctx.fillRect(-27, -6, 53, 22);
+    ctx.fillStyle = '#ffffff';
+    elipsa(0, 5, 14, 7);
+    ctx.fill();
+    ctx.fillStyle = '#fffaf0';
+    elipsa(0, -34, 30, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#c9d6e3';
+    ctx.stroke();
+  },
+
+  // klopsik
+  pulpet() {
+    kolo(0, 0, 36);
+    ctx.fillStyle = '#8a4b2a';
+    ctx.fill();
+    ctx.fillStyle = '#b06a3e';
+    elipsa(-10, -12, 16, 12);
+    ctx.fill();
+    ctx.fillStyle = '#5e2f18';
+    for (const [x, y] of [[14, 10], [-8, 16], [20, -10], [-20, 4]]) {
+      kolo(x, y, 3);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#4caf50';
+    for (const [x, y] of [[4, -20], [-16, -4]]) {
+      kolo(x, y, 2.5);
+      ctx.fill();
+    }
+  },
+
+  // słoik kremu czekoladowego
+  krem() {
+    zaokraglony(-30, -22, 60, 66, 12);
+    ctx.fillStyle = '#5a3220';
+    ctx.fill();
+    ctx.strokeStyle = '#3a1e12';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    zaokraglony(-22, -14, 7, 46, 3);
+    ctx.fill();
+    ctx.fillStyle = '#fff8ec';
+    elipsa(4, 14, 20, 16);
+    ctx.fill();
+    rysujEmotke('🌰', 4, 14, 22);
+    ctx.fillStyle = '#f2b33d';
+    zaokraglony(-34, -40, 68, 20, 6);
+    ctx.fill();
+  },
+
+  // torebka cukru pudru
+  cukier() {
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#d9cfe8';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-30, -30);
+    ctx.lineTo(30, -30);
+    ctx.lineTo(32, 44);
+    ctx.lineTo(-32, 44);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#f4eefb';
+    ctx.beginPath();
+    ctx.moveTo(-30, -30);
+    ctx.lineTo(-24, -44);
+    ctx.lineTo(24, -44);
+    ctx.lineTo(30, -30);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ff7eb6';
+    ctx.fillRect(-31, 0, 62, 20);
+    napis('CUKIER', 0, 11, 12, '#ffffff');
+    ctx.fillStyle = '#ffffff';
+    elipsa(0, -42, 22, 7);
+    ctx.fill();
+  },
+
+  // słoiczek kolorowej posypki
+  posypka() {
+    rysujSloiczekPosypki(['#ff5a5f', '#ffd23f', '#3ddc97', '#4cc9f0', '#c77dff', '#ffffff'], '#ff7eb6');
+  },
+
+  posypkaCzek() {
+    rysujSloiczekPosypki(['#4a2a18', '#6b3d22', '#3a1e12'], '#8a5a34');
+  },
+
+  // butelki z sosem do lodów
+  sosCzek() {
+    rysujButelkeSosu('#5a3220');
+  },
+
+  sosTrusk() {
+    rysujButelkeSosu('#e8304a');
+  },
+
+  // wafelek do lodów
+  wafelek() {
+    ctx.save();
+    ctx.rotate(-0.5);
+    zaokraglony(-12, -46, 24, 92, 8);
+    ctx.fillStyle = '#e2a860';
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    ctx.strokeStyle = '#b97b3c';
+    ctx.lineWidth = 2;
+    for (let y = -60; y < 60; y += 10) {
+      ctx.beginPath();
+      ctx.moveTo(-14, y);
+      ctx.lineTo(14, y + 12);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.restore();
+  },
+
   // wałek do ciasta
   walek() {
     ctx.save();
@@ -450,8 +690,56 @@ const RYSUNKI = {
   },
 };
 
+function rysujSloiczekPosypki(kolory, kolorPokrywki) {
+  zaokraglony(-28, -24, 56, 66, 12);
+  ctx.fillStyle = 'rgba(240, 248, 255, 0.95)';
+  ctx.fill();
+  ctx.strokeStyle = '#b9c9d6';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  const los = losowaZNasiona(kolory.length * 11);
+  for (let i = 0; i < 34; i++) {
+    ctx.save();
+    ctx.translate(-20 + los() * 40, -10 + los() * 46);
+    ctx.rotate(los() * Math.PI);
+    ctx.fillStyle = kolory[i % kolory.length];
+    zaokraglony(-5, -1.8, 10, 3.6, 1.8);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = kolorPokrywki;
+  zaokraglony(-31, -40, 62, 18, 6);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  for (const x of [-18, -6, 6, 18]) {
+    kolo(x, -31, 2.5);
+    ctx.fill();
+  }
+}
+
+function rysujButelkeSosu(kolor) {
+  ctx.fillStyle = kolor;
+  ctx.beginPath();
+  ctx.moveTo(-6, -50);
+  ctx.lineTo(6, -50);
+  ctx.lineTo(12, -30);
+  ctx.lineTo(-12, -30);
+  ctx.closePath();
+  ctx.fill();
+  zaokraglony(-24, -32, 48, 78, 16);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  zaokraglony(-16, -24, 7, 56, 3);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  elipsa(2, 8, 15, 13);
+  ctx.fill();
+  rysujSerce(2, 8, 7, kolor);
+}
+
 // Skąd wylewa się płyn albo sypie się proszek (w kwadracie 100 × 100, przed obróceniem)
 const WYLOTY = {
+  smietana: [28, -38],
   woda: [44, -48],
   mleko: [28, -44],
   miod: [22, -38],
@@ -645,8 +933,247 @@ function rysujNaczynie(n, x, y, s = 1, czas = 0) {
     case 'patelnia': rysujPatelnie(n, czas); break;
     case 'pizza': rysujPizze(n); break;
     case 'dzbanek': rysujDzbanek(n, czas); break;
+    case 'talerz': rysujTalerz(n); break;
+    case 'rozek': rysujRozek(n, czas); break;
   }
   ctx.restore();
+}
+
+// Gniazdo makaronu spaghetti – rysujemy je raz na osobnym płótnie (współrzędne od -1 do 1)
+let pamiecGniazda = null;
+
+function gniazdoMakaronu() {
+  if (pamiecGniazda) return pamiecGniazda;
+  const S = 512;
+  const c = document.createElement('canvas');
+  c.width = S;
+  c.height = S;
+  const g = c.getContext('2d');
+  const los = losowaZNasiona(42);
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  for (let i = 0; i < 90; i++) {
+    const a = los() * Math.PI * 2;
+    const r = Math.sqrt(los()) * 0.62;
+    let x = S / 2 + Math.cos(a) * r * S / 2;
+    let y = S / 2 + Math.sin(a) * r * S / 2;
+    let kier = los() * Math.PI * 2;
+    const punkty = [[x, y]];
+    for (let j = 0; j < 7; j++) {
+      kier += (los() - 0.5) * 1.8;
+      x += Math.cos(kier) * 22;
+      y += Math.sin(kier) * 22;
+      punkty.push([x, y]);
+    }
+    for (const [kolor, grubosc] of [['#d4a843', 11], ['#f6d77a', 7]]) {
+      g.strokeStyle = kolor;
+      g.lineWidth = grubosc;
+      g.beginPath();
+      punkty.forEach(([px, py], k) => (k ? g.lineTo(px, py) : g.moveTo(px, py)));
+      g.stroke();
+    }
+  }
+  pamiecGniazda = c;
+  return c;
+}
+
+// Duży talerz (spaghetti). n.ciasto.r to wielkość gniazda makaronu.
+function rysujTalerz(n) {
+  const R = 170, e = 0.62;
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  elipsa(6, 16, R + 4, R * e + 4);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  elipsa(0, 0, R, R * e);
+  ctx.fill();
+  ctx.strokeStyle = '#dfe6ee';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.strokeStyle = '#8fd0f5';
+  ctx.lineWidth = 3;
+  elipsa(0, 0, R * 0.8, R * e * 0.8);
+  ctx.stroke();
+  ctx.fillStyle = '#f4f7fa';
+  elipsa(0, 2, R * 0.74, R * e * 0.74);
+  ctx.fill();
+  if (!n.ciasto) return;
+  const r = n.ciasto.r;
+  ctx.save();
+  elipsa(0, 0, r * R, r * R * e);
+  ctx.clip();
+  ctx.save();
+  ctx.scale(R, R * e);
+  ctx.drawImage(gniazdoMakaronu(), -1, -1, 2, 2);
+  ctx.restore();
+  rysujWarstwy(n, R, e, 0);
+  ctx.restore();
+  for (const d of n.dodatki) rysujObrazek(SKLADNIKI[d.sk].obrazek, d.u * R, d.v * R * e - 6, 52, d.obrot);
+}
+
+// Rożek z lodami w stojaczku. (0, 0) to góra rożka. n.galki – gałki od dołu do góry.
+const R_GALKI = 60;
+
+function pozycjaGalkiLok(i) {
+  return -24 - i * 74;
+}
+
+function rysujRozek(n, czas = 0, zStojakiem = true) {
+  if (zStojakiem) {
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    elipsa(0, 178, 96, 14);
+    ctx.fill();
+    ctx.fillStyle = '#a8723f';
+    zaokraglony(-86, 120, 172, 56, 16);
+    ctx.fill();
+    ctx.fillStyle = '#c98d55';
+    elipsa(0, 120, 86, 20);
+    ctx.fill();
+  }
+  // wafel rożka
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(-56, 0);
+  ctx.lineTo(56, 0);
+  ctx.lineTo(0, 175);
+  ctx.closePath();
+  ctx.fillStyle = '#e8a85a';
+  ctx.fill();
+  ctx.clip();
+  ctx.strokeStyle = '#c47f35';
+  ctx.lineWidth = 3;
+  for (let i = -8; i <= 8; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 18, 0);
+    ctx.lineTo(i * 18 + 120, 180);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(i * 18, 0);
+    ctx.lineTo(i * 18 - 120, 180);
+    ctx.stroke();
+  }
+  ctx.restore();
+  if (zStojakiem) {
+    // przednia część stojaczka zasłania koniec rożka
+    ctx.fillStyle = '#c98d55';
+    ctx.beginPath();
+    ctx.ellipse(0, 120, 86, 20, 0, 0, Math.PI);
+    ctx.fill();
+    ctx.fillStyle = '#a8723f';
+    zaokraglony(-86, 124, 172, 52, 16);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#d98f3e';
+  elipsa(0, 0, 60, 14);
+  ctx.fill();
+  // gałki
+  const galki = n.galki || [];
+  galki.forEach((g, i) => {
+    const pojaw = g.pojaw === undefined ? 1 : sprezyna(g.pojaw);
+    const y = pozycjaGalkiLok(i);
+    const r = R_GALKI * pojaw;
+    if (r < 1) return;
+    // falbanka na dole gałki
+    ctx.fillStyle = przyciemnij(g.kolor, 0.9);
+    for (let k = -3; k <= 3; k++) {
+      kolo(k * r * 0.28, y + r * 0.62, r * 0.2);
+      ctx.fill();
+    }
+    ctx.fillStyle = g.kolor;
+    kolo(0, y, r);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    elipsa(-r * 0.35, y - r * 0.4, r * 0.25, r * 0.16);
+    ctx.fill();
+    if (g.smak === 'mietowe') {
+      ctx.fillStyle = '#3a2416';
+      for (const [dx, dy] of [[-20, -8], [14, -22], [22, 10], [-6, 18], [-28, 14]]) {
+        kolo(dx * r / R_GALKI, y + dy * r / R_GALKI, 3.5);
+        ctx.fill();
+      }
+    }
+  });
+  // sos na górnej gałce
+  const n0 = galki.length;
+  if (n.sos && n0) {
+    const y = pozycjaGalkiLok(n0 - 1);
+    const r = R_GALKI;
+    ctx.fillStyle = n.sos;
+    ctx.beginPath();
+    ctx.arc(0, y, r + 1, Math.PI * 1.02, Math.PI * 1.98);
+    for (let k = 0; k <= 10; k++) {
+      const x = r - k * r * 0.2;
+      const kapka = k % 3 === 1 ? 26 : k % 2 ? 6 : 14;
+      ctx.lineTo(x, y + kapka);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    elipsa(-r * 0.3, y - r * 0.55, r * 0.22, r * 0.1);
+    ctx.fill();
+  }
+  // posypka
+  for (const p of n.posypki || []) {
+    if (p.i >= n0) continue;
+    const y = pozycjaGalkiLok(p.i);
+    ctx.save();
+    ctx.translate(Math.cos(p.a) * p.d * R_GALKI, y + Math.sin(p.a) * p.d * R_GALKI * 0.85);
+    ctx.rotate(p.obrot);
+    ctx.fillStyle = p.kolor;
+    zaokraglony(-5, -1.8, 10, 3.6, 1.8);
+    ctx.fill();
+    ctx.restore();
+  }
+  // rzeczy położone na lodach (Moja potrawa)
+  for (const d of n.dodatki || []) {
+    if (d.i >= n0) continue;
+    rysujObrazek(SKLADNIKI[d.sk].obrazek, Math.cos(d.a) * d.d * R_GALKI, pozycjaGalkiLok(d.i) + Math.sin(d.a) * d.d * R_GALKI * 0.8, 44, d.obrot);
+  }
+  if (n0) {
+    const gora = pozycjaGalkiLok(n0 - 1) - R_GALKI;
+    if (n.wafelek) rysujObrazek('*wafelek', 30, gora + 8, 80, 0.2);
+    if (n.wisienka) rysujEmotke('🍒', -4, gora - 12, 50, -0.15);
+  }
+}
+
+// Pudełko z lodami (do wybierania smaku). (x, y) to środek pudełka.
+function rysujPudelkoLodow(x, y, smak, s = 1) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  ctx.fillStyle = 'rgba(0,0,0,0.13)';
+  elipsa(0, 44, 60, 12);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(-58, -12);
+  ctx.lineTo(58, -12);
+  ctx.lineTo(48, 44);
+  ctx.lineTo(-48, 44);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = smak.kolor;
+  ctx.fillRect(-56, 6, 112, 12);
+  // lody w pudełku
+  ctx.fillStyle = smak.kolor;
+  ctx.beginPath();
+  ctx.ellipse(0, -12, 58, 16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-8, -22, 34, 16, 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  elipsa(-18, -26, 12, 5);
+  ctx.fill();
+  ctx.strokeStyle = '#e3e8ee';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-58, -12);
+  ctx.lineTo(-48, 44);
+  ctx.lineTo(48, 44);
+  ctx.lineTo(58, -12);
+  ctx.stroke();
+  ctx.restore();
+  rysujEmotke(smak.ikona, x, y + 30 * s, 28 * s);
 }
 
 // Palnik kuchenki pod garnkiem / patelnią. dol = gdzie jest dno naczynia
@@ -1341,6 +1868,8 @@ function rysujPorcje(p, x, y, s, zostalo) {
     case 'pizza': porcjaPizza(zostalo, p); break;
     case 'szklanka': porcjaSzklanka(p, zostalo); break;
     case 'wlasna': porcjaWlasna(); break;
+    case 'spaghetti': porcjaSpaghetti(zostalo); break;
+    case 'lody': porcjaLody(p, zostalo); break;
   }
   ctx.restore();
 }
@@ -1398,6 +1927,68 @@ function porcjaMiseczka(p, zostalo) {
   ctx.stroke();
 }
 
+function porcjaSpaghetti(zostalo) {
+  talerz();
+  if (zostalo <= 0.01) return;
+  const k = 0.5 + 0.5 * zostalo;
+  ctx.save();
+  ctx.translate(0, -12);
+  ctx.scale(k, k);
+  ctx.save();
+  elipsa(0, 0, 54, 20);
+  ctx.clip();
+  ctx.save();
+  ctx.scale(68, 26);
+  ctx.drawImage(gniazdoMakaronu(), -1, -1, 2, 2);
+  ctx.restore();
+  ctx.restore();
+  ctx.fillStyle = '#d8321f';
+  ctx.beginPath();
+  for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.4) {
+    const r = 26 + Math.sin(a * 5) * 4;
+    ctx.lineTo(Math.cos(a) * r, -4 + Math.sin(a) * r * 0.4);
+  }
+  ctx.fill();
+  ctx.strokeStyle = '#ffe47e';
+  ctx.lineWidth = 2.5;
+  for (const [x, y, o] of [[-10, -8, 0.4], [6, -2, -0.6], [14, -9, 1.2]]) {
+    ctx.beginPath();
+    ctx.moveTo(x - Math.cos(o) * 5, y - Math.sin(o) * 5);
+    ctx.lineTo(x + Math.cos(o) * 5, y + Math.sin(o) * 5);
+    ctx.stroke();
+  }
+  rysujObrazek('*pulpet', -4, -12, 24);
+  ctx.restore();
+}
+
+function porcjaLody(p, zostalo) {
+  // rożek w małym kubeczku na talerzyku
+  talerz();
+  if (zostalo <= 0.01) return;
+  const galki = (p.galki || []).map((kolor, i) => ({ kolor, smak: (p.smaki || [])[i], pojaw: 1 }));
+  const ile = Math.ceil(galki.length * zostalo);
+  ctx.save();
+  ctx.translate(0, -66);
+  ctx.scale(0.3, 0.3);
+  rysujRozek({
+    galki: galki.slice(0, ile),
+    posypki: p.posypki,
+    dodatki: p.dodatkiLodow,
+    sos: ile === galki.length ? p.sos : null,
+    wisienka: ile === galki.length && p.wisienka,
+    wafelek: ile === galki.length && p.wafelek,
+  }, 0, false);
+  ctx.restore();
+  ctx.fillStyle = '#8fd0f5';
+  ctx.beginPath();
+  ctx.moveTo(-17, -36);
+  ctx.lineTo(17, -36);
+  ctx.lineTo(13, -10);
+  ctx.lineTo(-13, -10);
+  ctx.closePath();
+  ctx.fill();
+}
+
 // Karta „Moja potrawa”: miseczka, z której wyskakują różne składniki
 function porcjaWlasna() {
   porcjaMiseczka({ kolor: '#d9b3ff', wPorcji: [] }, 1);
@@ -1431,11 +2022,13 @@ function porcjaNalesnik(zostalo, p = {}) {
     elipsa(12 + i * 18, -6 + (i % 2) * 10, 4, 3);
     ctx.fill();
   }
-  // koniec zawijasa z dżemem
+  // koniec zawijasa z nadzieniem (dżem albo krem czekoladowy)
+  const wybrane = p.wybrane || ['dzem'];
+  const nadzienie = wybrane.includes('krem') ? '#5a3220' : wybrane.includes('dzem') ? '#c8173f' : '#e9b45a';
   ctx.fillStyle = '#f3d08a';
   kolo(L - 14, 0, 16);
   ctx.fill();
-  ctx.strokeStyle = '#c8173f';
+  ctx.strokeStyle = nadzienie;
   ctx.lineWidth = 3.5;
   ctx.beginPath();
   for (let a = 0; a < Math.PI * 4; a += 0.3) {
@@ -1443,9 +2036,20 @@ function porcjaNalesnik(zostalo, p = {}) {
     ctx.lineTo(L - 14 + Math.cos(a) * r, Math.sin(a) * r);
   }
   ctx.stroke();
-  ctx.fillStyle = '#c8173f';
-  elipsa(L * 0.5, 15, 10, 5);
-  ctx.fill();
+  if (nadzienie !== '#e9b45a') {
+    ctx.fillStyle = nadzienie;
+    elipsa(L * 0.5, 15, 10, 5);
+    ctx.fill();
+  }
+  if (wybrane.includes('cukier')) {
+    // cukier puder na wierzchu
+    const los = losowaZNasiona(5);
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    for (let i = 0; i < 40; i++) {
+      kolo(4 + los() * (L - 12), -14 + los() * 14, 1.6);
+      ctx.fill();
+    }
+  }
   if (p.wlasny) kawalkiPorcji(p, [[L * 0.3, -18], [L * 0.62, -20]], 30);
   ctx.restore();
 }

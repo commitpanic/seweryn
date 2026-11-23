@@ -37,13 +37,29 @@ const KOLORY_PRZEPISOW = {
   pizza: '#e63946',
   sok: '#ff9f1c',
   wlasna: '#c77dff',
+  zupy: '#ff7b54',
+  rosol: '#f2a900',
+  ogorkowa: '#7cb342',
+  barszcz: '#b0243f',
+  zurek: '#c9a46a',
+  spaghetti: '#e85d3a',
+  lody: '#ff7eb6',
 };
+
+// Karta „Zupy” – po stuknięciu wybierasz jedną z zup
+const KARTA_ZUP = { id: 'zupy', nazwa: 'Zupy', porcja: 'miseczka', kolor: '#e0452b', wPorcji: ['marchewka', 'pomidor', 'pietruszka'] };
+
+// Co jest w książce kucharskiej (po kolei)
+function kartyKsiazki() {
+  const pojedyncze = PRZEPISY.filter((p) => !p.grupa);
+  return [KARTA_ZUP, ...pojedyncze, MOJA_KARTA];
+}
 
 // Karta „Moja potrawa” w książce kucharskiej
 const MOJA_KARTA = { id: 'wlasna', nazwa: 'Moja potrawa', porcja: 'wlasna' };
 
 // Krótkie nazwy na kartach wyboru własnej potrawy
-const NAZWY_WLASNYCH = { zupa: 'Zupa', pizza: 'Pizza', nalesniki: 'Naleśniki', salatka: 'Sałatka', sok: 'Sok' };
+const NAZWY_WLASNYCH = { zupa: 'Zupa', pizza: 'Pizza', nalesniki: 'Naleśniki', salatka: 'Sałatka', sok: 'Sok', spaghetti: 'Spaghetti', lody: 'Lody' };
 
 const NAJWIECEJ_SKLADNIKOW = 12;   // tyle składników można wrzucić do własnej potrawy
 
@@ -52,6 +68,8 @@ const NAJWIECEJ_SKLADNIKOW = 12;   // tyle składników można wrzucić do włas
 //   STAN GRY
 // =====================================================
 let ekran = 'ksiazka';      // 'ksiazka' | 'wybor' | 'wstep' | 'gotowanie' | 'stol' | 'brawo'
+let rodzajWyboru = 'wlasna';  // ekran wyboru: 'zupy' albo 'wlasna'
+let podgladacz = null;      // przyjaciel, który zagląda przez okno do kuchni
 let przepis = null;         // co teraz gotujemy
 let nrKroku = 0;            // który krok przepisu
 let K = null;               // trwający krok (jego stan)
@@ -125,6 +143,8 @@ function ulozMiejsca() {
       patelnia: { x: nx, y: 430 },
       pizza: { x: w * (wlasny ? 0.68 : 0.62), y: 640 },
       dzbanek: { x: nx, y: 270 },
+      talerz: { x: w * 0.62, y: 640 },
+      rozek: { x: nx, y: 465 },
     };
     const dx = w * 0.26;
     M.deska = { x: dx, y: 650 };
@@ -132,9 +152,12 @@ function ulozMiejsca() {
     M.przedmiot = { x: dx, y: 630 };
     M.dodatki = { x: dx, y: 660 };
     M.okno = { x: dx - 120, y: 205, w: 240, h: 190 };
-    // spiżarnia (własna potrawa): 3 rzędy po 6 składników
-    M.spizarnia = SPIZARNIA.map((sk, i) => ({ x: dx + (i % 6 - 2.5) * 78, y: 562 + Math.floor(i / 6) * 82 }));
+    // spiżarnia (własna potrawa): zakładki, a pod nimi 3 rzędy po 4 rzeczy
+    M.zakladki = ZAKLADKI_SPIZARNI.map((z, i) => ({ x: dx + (i - 1.5) * 100, y: 535 }));
+    M.spizarnia = Array.from({ length: 12 }, (_, i) => ({ x: dx + (i % 4 - 1.5) * 95, y: 610 + Math.floor(i / 4) * 72 }));
     M.gotowe = { x: w - 125, y: 755 };
+    // pudełka z lodami i dodatki do lodów: 2 rzędy po 3
+    M.pudelka = [0, 1, 2, 3, 4, 5].map((i) => ({ x: dx + (i % 3 - 1) * 145, y: 585 + Math.floor(i / 3) * 125 }));
     M.polkaDeko = { x: w - 250, y: 240, w: 220 };
     // przy stole
     M.stolY = 520;
@@ -155,6 +178,8 @@ function ulozMiejsca() {
       patelnia: { x: nx, y: M.blat - 72 },
       pizza: { x: nx, y: wlasny ? M.blat + 40 : M.blat + (h - M.blat) * 0.42 },
       dzbanek: { x: nx, y: M.blat - 240 },
+      talerz: { x: nx, y: M.blat + (h - M.blat) * 0.42 },
+      rozek: { x: nx, y: M.blat - 30 },
     };
     const dy = M.blat + (h - M.blat) * 0.55;
     M.deska = { x: 400, y: dy };
@@ -162,8 +187,10 @@ function ulozMiejsca() {
     M.przedmiot = { x: 400, y: dy - 20 };
     M.dodatki = { x: 400, y: h - 80 };
     M.okno = { x: 60, y: M.blat - 470, w: 190, h: 160 };
-    M.spizarnia = SPIZARNIA.map((sk, i) => ({ x: 400 + (i % 6 - 2.5) * 125, y: h - 300 + Math.floor(i / 6) * 105 }));
-    M.gotowe = { x: 650, y: h - 390 };
+    M.zakladki = ZAKLADKI_SPIZARNI.map((z, i) => ({ x: 130 + i * 120, y: h - 380 }));
+    M.spizarnia = Array.from({ length: 12 }, (_, i) => ({ x: 400 + (i % 4 - 1.5) * 150, y: h - 280 + Math.floor(i / 4) * 95 }));
+    M.gotowe = { x: 655, y: h - 385 };
+    M.pudelka = [0, 1, 2, 3, 4, 5].map((i) => ({ x: 400 + (i % 3 - 1) * 220, y: h - 290 + Math.floor(i / 3) * 140 }));
     M.polkaDeko = { x: 560, y: M.blat - 400, w: 210 };
     M.stolY = Math.round(h * 0.55);
     M.zwY = M.stolY + 20;
@@ -336,6 +363,9 @@ const dzwiekPodania = () => slizg(380, 900, 0.28, 'sine', 0.09);
 const dzwiekMniam = () => { slizg(330, 260, 0.1, 'sine', 0.13); slizg(390, 300, 0.12, 'sine', 0.13, 0.13); };
 const dzwiekFuj = () => { melodyjka([[0, 340], [0.12, 300], [0.45, 170]], 'sawtooth', 0.08, 0, 1000); szum(0.3, 'bandpass', 600, 300, 0.12); };
 const dzwiekSmutnejTraby = () => [392, 370, 349, 294].forEach((f, i) => melodyjka([[0, f], [i === 3 ? 0.7 : 0.3, f * 0.97]], 'sawtooth', 0.08, i * 0.32, 1100));
+const dzwiekNakladania = () => { szum(0.12, 'lowpass', 900, 300, 0.25); slizg(300, 520, 0.12, 'sine', 0.1); };
+const dzwiekHihi = () => { slizg(900, 1300, 0.07, 'sine', 0.08); slizg(950, 1400, 0.07, 'sine', 0.08, 0.11); };
+const dzwiekMruczenia = () => { for (const o of [0, 0.12, 0.24]) szum(0.1, 'lowpass', 220, 120, 0.4, o); };
 const dzwiekFanfary = () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => pisk(f, i === 5 ? 0.6 : 0.2, 'triangle', 0.15, i * 0.14));
 
 // Każdy zwierzak cieszy się po swojemu
@@ -680,7 +710,12 @@ function noweNaczynie(typ) {
     ogien: 0,             // płomyki pod spodem
     wir: 0,               // jak bardzo zakręcone (do fal na zupie)
     goracy: false,        // czy paruje
-    ciasto: typ === 'pizza' ? { r: 0.36 } : null,
+    ciasto: typ === 'pizza' ? { r: 0.36 } : typ === 'talerz' ? { r: 0.8 } : null,   // na talerzu: gniazdo makaronu
+    galki: [],            // gałki lodów
+    posypki: [],          // posypka na lodach
+    sos: null,            // sos na lodach
+    wisienka: false,
+    wafelek: false,
     warstwy: [],          // sos, ser, dżem
     dodatki: [],          // grzybki i salami na pizzy
     upieczenie: 0,
@@ -1449,7 +1484,23 @@ function stempel(w, g, u, v, r) {
   const px = (u + 1) * S / 2;
   const py = (v + 1) * S / 2;
   const pr = r * S / 2;
-  if (w.sk === 'ser') {
+  if (w.styl === 'parmezan') {
+    // parmezan na spaghetti: drobne jasne płatki
+    for (let i = 0; i < 4; i++) {
+      g.fillStyle = i % 2 ? '#fff8e1' : '#f3e3a6';
+      g.beginPath();
+      g.arc(px + losowa(-1, 1) * pr * 0.9, py + losowa(-1, 1) * pr * 0.9, losowa(1.5, 3), 0, Math.PI * 2);
+      g.fill();
+    }
+  } else if (w.sk === 'cukier') {
+    // cukier puder: dużo malutkich białych kropeczek
+    g.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    for (let i = 0; i < 7; i++) {
+      g.beginPath();
+      g.arc(px + losowa(-1, 1) * pr * 0.9, py + losowa(-1, 1) * pr * 0.9, losowa(1, 2.2), 0, Math.PI * 2);
+      g.fill();
+    }
+  } else if (w.sk === 'ser') {
     g.lineCap = 'round';
     for (let i = 0; i < 4; i++) {
       const a = Math.random() * Math.PI;
@@ -1472,7 +1523,7 @@ function stempel(w, g, u, v, r) {
     g.arc(px, py, pr, 0, Math.PI * 2);
     g.fill();
     if (Math.random() < 0.3) {
-      g.fillStyle = w.sk === 'dzem' ? 'rgba(255, 200, 210, 0.7)' : 'rgba(150, 20, 10, 0.4)';
+      g.fillStyle = w.sk === 'dzem' ? 'rgba(255, 200, 210, 0.7)' : w.sk === 'krem' ? 'rgba(140, 90, 60, 0.6)' : 'rgba(150, 20, 10, 0.4)';
       g.beginPath();
       g.arc(px + losowa(-pr, pr) * 0.6, py + losowa(-pr, pr) * 0.6, pr * 0.15, 0, Math.PI * 2);
       g.fill();
@@ -1480,13 +1531,13 @@ function stempel(w, g, u, v, r) {
   }
 }
 
-function nowaWarstwa(sk, promien) {
-  const w = { sk, plotno: nowePlotno(256), pelnePlotno: nowePlotno(256), pelne: 0, pelneCel: 0 };
+function nowaWarstwa(sk, promien, styl = sk) {
+  const w = { sk, styl, plotno: nowePlotno(256), pelnePlotno: nowePlotno(256), pelne: 0, pelneCel: 0 };
   w.g = w.plotno.getContext('2d');
   // „pełna” wersja: tak wygląda, kiedy wszystko jest pomalowane (pokazuje się na końcu)
   const g = w.pelnePlotno.getContext('2d');
-  if (sk === 'ser') {
-    for (let i = 0; i < 220; i++) {
+  if (sk === 'ser' || sk === 'cukier') {
+    for (let i = 0; i < (styl === 'parmezan' ? 90 : sk === 'cukier' ? 110 : 220); i++) {
       const a = Math.random() * Math.PI * 2;
       const r = Math.sqrt(Math.random()) * promien;
       stempel(w, g, Math.cos(a) * r, Math.sin(a) * r, 0.15);
@@ -1502,8 +1553,11 @@ function nowaWarstwa(sk, promien) {
 
 MECH.smaruj = {
   start(k) {
-    k.promien = N.typ === 'pizza' ? N.ciasto.r * 0.86 : (N.nalesnik ? N.nalesnik.r * 0.78 : 0.7);
-    k.w = nowaWarstwa(k.def.skladnik, k.promien);
+    // pizza: całe ciasto; spaghetti: środek talerza; naleśnik: prawie cały
+    if (N.typ === 'talerz') k.promien = N.ciasto.r * 0.6;
+    else if (N.ciasto) k.promien = N.ciasto.r * 0.86;
+    else k.promien = N.nalesnik ? N.nalesnik.r * 0.78 : 0.7;
+    k.w = nowaWarstwa(k.def.skladnik, k.promien, N.typ === 'talerz' && k.def.skladnik === 'ser' ? 'parmezan' : k.def.skladnik);
     N.warstwy.push(k.w);
     k.komorki = [];
     const n = 14;
@@ -1848,18 +1902,264 @@ MECH.wyciskaj = {
 };
 
 
+// ---------- WYBÓR (np. czym posmarować naleśnika) ----------
+function miejscaOpcji(ile) {
+  const m = V.pion ? { x: 400, y: M.deska.y } : { x: M.deska.x, y: M.deska.y };
+  const odst = V.pion ? 220 : 172;
+  return Array.from({ length: ile }, (_, i) => ({ x: m.x + (i - (ile - 1) / 2) * odst, y: m.y }));
+}
+
+function wybierzOpcje(k, opcja) {
+  dzwiekKlik();
+  const pozostale = k.def.opcje.filter((o) => o !== opcja);
+  const nowe = [JSON.parse(JSON.stringify(opcja.krok))];
+  // potem można wybrać jeszcze coś (albo skończyć)
+  if (pozostale.length) nowe.push({ ...k.def, opcje: pozostale, mozeSkonczyc: true, tekst: k.def.tekstPotem || k.def.tekst });
+  przepis.kroki.splice(nrKroku, 1, ...nowe);
+  przepis.wybrane = (przepis.wybrane || []).concat(opcja.skladnik);
+  zacznijKrok(false);
+}
+
+function skonczWybieranie() {
+  if (K.gotowe) return;
+  dzwiekKlik();
+  przepis.kroki.splice(nrKroku, 1);   // ten krok znika z paska
+  nrKroku--;
+  krokGotowy();
+}
+
+MECH.wybierz = {
+  start(k) {
+    const m = miejscaOpcji(k.def.opcje.length);
+    k.opcje = k.def.opcje.map((o, i) => ({ o, x: m[i].x, y: m[i].y, pojaw: -i * 0.12 }));
+  },
+  dotyk(k, x, y) {
+    for (const r of k.opcje) {
+      if (blisko(x, y, r.x, r.y, 75)) {
+        wybierzOpcje(k, r.o);
+        return;
+      }
+    }
+  },
+  update(k, dt) {
+    for (const r of k.opcje) r.pojaw = Math.min(1, r.pojaw + dt * 3);
+  },
+  rysuj(k) {
+    for (const r of k.opcje) {
+      const wiel = 120 * sprezyna(Math.max(0, r.pojaw));
+      if (wiel <= 1) continue;
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      kolo(r.x, r.y, 74 * sprezyna(Math.max(0, r.pojaw)));
+      ctx.fill();
+      rysujSkladnik(r.o.skladnik, r.x, r.y - 6 + Math.sin(czas * 3 + r.x) * 3, wiel * 0.85);
+      napis(SKLADNIKI[r.o.skladnik].nazwa, r.x, r.y + 86, dopasujRozmiarNapisu(SKLADNIKI[r.o.skladnik].nazwa, 160, 20), '#8a4b1c', 'center', '#ffffff');
+    }
+    if (k.def.mozeSkonczyc && !k.gotowe) {
+      const b = M.gotowe;
+      rysujPrzyciskTekst(b.x, b.y, 210, 76, 'Gotowe ✓', '#3ddc97', 32, czyWcisniety('gotowe'));
+      dodajPrzycisk('gotowe', b.x, b.y, 210, 80, skonczWybieranie);
+    }
+  },
+  podpowiedz(k) {
+    if (k.def.mozeSkonczyc) return { typ: 'stuk', x: M.gotowe.x, y: M.gotowe.y };
+    const r = k.opcje[0];
+    return { typ: 'stuk', x: r.x, y: r.y };
+  },
+};
+
+// ---------- LODY: nakładanie gałek ----------
+function pozycjaGalki(i) {
+  const p = pozN();
+  return { x: p.x, y: p.y + pozycjaGalkiLok(i) };
+}
+
+function zapiszLody() {
+  przepis.galki = N.galki.map((g) => g.kolor);
+  przepis.smaki = N.galki.map((g) => g.smak);
+  przepis.posypki = N.posypki;
+  przepis.sos = N.sos;
+  przepis.wisienka = N.wisienka;
+  przepis.wafelek = N.wafelek;
+  przepis.dodatkiLodow = N.dodatki;
+}
+
+function zakonczGalki(k) {
+  if (k.gotowe || k.lecace > 0 || !N.galki.length) return;
+  zapiszLody();
+  krokGotowy();
+}
+
+MECH.galki = {
+  start(k) {
+    k.lecace = 0;
+    k.pudelka = SMAKI_LODOW.map((smak, i) => ({ smak, x: M.pudelka[i].x, y: M.pudelka[i].y, pojaw: -i * 0.08, chwiej: 0 }));
+  },
+  dotyk(k, x, y) {
+    if (N.galki.length + k.lecace >= k.def.ile) return;
+    for (const p of k.pudelka) {
+      if (Math.abs(x - p.x) < 70 && Math.abs(y - p.y) < 62) {
+        // łyżka nabiera gałkę i gałka leci na rożek
+        p.chwiej = 0.4;
+        k.lecace++;
+        dzwiekNakladania();
+        powiedz(p.smak.nazwa);
+        const cel = pozycjaGalki(N.galki.length + k.lecace - 1);
+        const smak = p.smak;
+        rzuc(p.x, p.y - 30, cel.x, cel.y, 140, 0.5, (lx, ly) => {
+          ctx.fillStyle = smak.kolor;
+          kolo(lx, ly, 34);
+          ctx.fill();
+        }, () => {
+          k.lecace--;
+          N.galki.push({ kolor: smak.kolor, smak: smak.id, pojaw: 0 });
+          dzwiekPlop();
+          iskry(cel.x, cel.y, 6);
+        });
+        return;
+      }
+    }
+  },
+  update(k, dt) {
+    for (const p of k.pudelka) {
+      p.pojaw = Math.min(1, p.pojaw + dt * 4);
+      p.chwiej = Math.max(0, p.chwiej - dt);
+    }
+    for (const g of N.galki) g.pojaw = Math.min(1, g.pojaw + dt * 4);
+    if (N.galki.length >= k.def.ile) zakonczGalki(k);
+  },
+  rysuj(k) {
+    for (const p of k.pudelka) {
+      const s = sprezyna(Math.max(0, p.pojaw));
+      if (s <= 0.01) continue;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(Math.sin(p.chwiej * 40) * 0.1 * p.chwiej);
+      rysujPudelkoLodow(0, 0, p.smak, s);
+      ctx.restore();
+    }
+    if (N.galki.length && !k.gotowe) {
+      const b = M.gotowe;
+      rysujPrzyciskTekst(b.x, b.y, 210, 76, 'Gotowe ✓', '#3ddc97', 32, czyWcisniety('gotowe'));
+      dodajPrzycisk('gotowe', b.x, b.y, 210, 80, () => zakonczGalki(k));
+    }
+  },
+  podpowiedz(k) {
+    const p = k.pudelka[(N.galki.length * 2 + 1) % k.pudelka.length];
+    return { typ: 'stuk', x: p.x, y: p.y };
+  },
+};
+
+// ---------- LODY: dekorowanie ----------
+const KOLORY_POSYPKI = ['#ff5a5f', '#ffd23f', '#3ddc97', '#4cc9f0', '#c77dff', '#ffffff'];
+
+function udekoruj(k, r) {
+  r.chwiej = 0.4;
+  k.ile++;
+  const n = N.galki.length;
+  const gora = pozycjaGalki(n - 1);
+  const sk = r.sk;
+  powiedz(SKLADNIKI[sk].nazwa);
+  if (sk === 'posypka' || sk === 'posypkaCzek') {
+    for (let i = 0; i < 22; i++) {
+      // najwięcej posypki na górnej gałce
+      const ktora = Math.max(0, n - 1 - Math.floor(Math.random() * Math.random() * n));
+      N.posypki.push({
+        i: ktora, a: Math.random() * Math.PI * 2, d: Math.sqrt(Math.random()) * 0.85, obrot: Math.random() * Math.PI,
+        kolor: sk === 'posypka' ? KOLORY_POSYPKI[i % KOLORY_POSYPKI.length] : ['#4a2a18', '#6b3d22'][i % 2],
+      });
+    }
+    for (let i = 0; i < 3; i++) setTimeout(dzwiekSypania, i * 90);
+    for (let i = 0; i < 14; i++) {
+      dodajEfekt({ typ: 'ziarno', x: gora.x + losowa(-50, 50), y: gora.y - 140, vx: 0, vy: losowa(100, 200), g: 900, zycie: 1, doY: gora.y - 20, kolor: sk === 'posypka' ? KOLORY_POSYPKI[i % 6] : '#4a2a18', r: 3 });
+    }
+  } else if (sk === 'sosCzek' || sk === 'sosTrusk') {
+    N.sos = SKLADNIKI[sk].kolor;
+    dzwiekLania();
+    setTimeout(dzwiekLania, 120);
+    krople(gora.x, gora.y - 50, N.sos, 6, 0.4, gora.y);
+  } else if (sk === 'wisienka' || sk === 'wafelek') {
+    if (N[sk]) {
+      dzwiekNieTo();
+      return;
+    }
+    rzuc(r.x, r.y, gora.x, gora.y - 70, 120, 0.45, (x, y) => rysujSkladnik(sk, x, y, 60), () => {
+      N[sk] = true;
+      dzwiekPlop();
+      iskry(gora.x, gora.y - 70, 8);
+    });
+  }
+}
+
+function zakonczDekorowanie(k) {
+  if (k.gotowe) return;
+  zapiszLody();
+  krokGotowy();
+}
+
+MECH.dekoruj = {
+  start(k) {
+    k.ile = 0;
+    k.rzeczy = DEKORACJE_LODOW.map((sk, i) => ({ sk, x: M.pudelka[i].x, y: M.pudelka[i].y, pojaw: -i * 0.08, chwiej: 0 }));
+  },
+  dotyk(k, x, y) {
+    for (const r of k.rzeczy) {
+      if (blisko(x, y, r.x, r.y, 66)) {
+        udekoruj(k, r);
+        return;
+      }
+    }
+  },
+  update(k, dt) {
+    for (const r of k.rzeczy) {
+      r.pojaw = Math.min(1, r.pojaw + dt * 4);
+      r.chwiej = Math.max(0, r.chwiej - dt);
+    }
+  },
+  rysuj(k) {
+    for (const r of k.rzeczy) {
+      const wiel = 100 * sprezyna(Math.max(0, r.pojaw));
+      if (wiel <= 1) continue;
+      cien(r.x, r.y + 46, 100);
+      rysujSkladnik(r.sk, r.x, r.y, wiel, Math.sin(r.chwiej * 40) * 0.2 * r.chwiej);
+    }
+    if (k.ile && !k.gotowe) {
+      const b = M.gotowe;
+      rysujPrzyciskTekst(b.x, b.y, 210, 76, 'Gotowe ✓', '#3ddc97', 32, czyWcisniety('gotowe'));
+      dodajPrzycisk('gotowe', b.x, b.y, 210, 80, () => zakonczDekorowanie(k));
+    }
+  },
+  podpowiedz(k) {
+    if (k.ile >= 3) return { typ: 'stuk', x: M.gotowe.x, y: M.gotowe.y };
+    const r = k.rzeczy[k.ile % k.rzeczy.length];
+    return { typ: 'stuk', x: r.x, y: r.y };
+  },
+};
+
+
 // ---------- MOJA POTRAWA: wrzucasz, co chcesz ----------
 function nadCelemDowolnego(x, y) {
-  if (N.typ === 'pizza') return naPizzy(x, y) || nadNaczyniem(x, y);
+  if (N.typ === 'rozek') {
+    const p = pozN();
+    return Math.abs(x - p.x) < 120 && y > p.y - 320 && y < p.y + 180;
+  }
+  if (N.ciasto) return naPizzy(x, y) || nadNaczyniem(x, y);
   return nadNaczyniem(x, y);
 }
 
 function dodajDowolny(sk, x, y) {
   const d = SKLADNIKI[sk];
-  if (N.typ === 'pizza' || N.typ === 'patelnia') {
-    // na pizzy i naleśniku składnik leży tam, gdzie go puścisz
+  if (N.typ === 'rozek') {
+    // na lodach: przyklejamy do gałki (najczęściej do górnej)
+    const n = N.galki.length;
+    const ktora = Math.max(0, n - 1 - Math.floor(Math.random() * Math.random() * n));
+    N.dodatki.push({ sk, i: ktora, a: losowa(-Math.PI, 0), d: losowa(0.2, 0.7), obrot: losowa(-0.5, 0.5) });
+    dzwiekPlop();
+    const g = pozycjaGalki(ktora);
+    iskry(g.x, g.y, 5);
+  } else if (N.ciasto || N.typ === 'patelnia') {
+    // na pizzy, spaghetti i naleśniku składnik leży tam, gdzie go puścisz
     let uv = naUV(x, y);
-    const r = (N.typ === 'pizza' ? N.ciasto.r : N.nalesnik.r) * 0.7;
+    const r = (N.ciasto ? N.ciasto.r : N.nalesnik.r) * 0.7;
     const l = Math.hypot(uv.u, uv.v);
     if (l > r) uv = { u: uv.u / l * r, v: uv.v / l * r };
     N.dodatki.push({ sk, u: uv.u, v: uv.v, obrot: losowa(-0.5, 0.5) });
@@ -1870,8 +2170,10 @@ function dodajDowolny(sk, x, y) {
     // w dzbanku owoce zamieniają się w sok i go zabarwiają
     N.kolor = N.plyn < 0.02 || !N.kolor ? d.kolor : mieszajKolory(N.kolor, d.kolor, 0.4);
     N.plyn = Math.min(0.85, N.plyn + 0.14);
-    if (sk === 'lod') N.kawalki.push(nowyKawalek(sk, -1, 1));
+    if (sk === 'lod' || d.niejadalne) N.kawalki.push(nowyKawalek(sk, -1, 1));   // to pływa w soku
     chlupnij();
+  } else if (d.niejadalne) {
+    dodajCalosc(sk);   // skarpetki nie kroimy :)
   } else {
     wrzucPlasterki(sk, 2);
   }
@@ -1886,8 +2188,10 @@ function sredniKolor(lista) {
 // Czy składniki pasują do siebie? Zwraca null (pasują) albo zdanie, co jest dziwne.
 function ocenSmak(p, lista) {
   const nazwa = (sk) => SKLADNIKI[sk].nazwa;
+  const smieszne = lista.filter((sk) => SKLADNIKI[sk].niejadalne);
+  if (smieszne.length) return `${nazwa(smieszne[0])} ${p.gdzie}? Fuuu!`;
   const zimne = lista.filter((sk) => SMAKI[sk] === 'zimny');
-  if (zimne.length && p.typ !== 'sok') return `${nazwa(zimne[0])} ${p.gdzie}? Brrr, dziwne!`;
+  if (zimne.length && p.typ !== 'sok' && p.typ !== 'lody') return `${nazwa(zimne[0])} ${p.gdzie}? Brrr, dziwne!`;
   const slodkie = lista.filter((sk) => SMAKI[sk] === 'slodki');
   let slone = lista.filter((sk) => SMAKI[sk] === 'slony');
   if (p.typ === 'sok') slone = slone.filter((sk) => !DO_SOKU_TEZ.includes(sk));
@@ -1904,16 +2208,35 @@ function zakonczDowolne(k) {
   if (przepis.typ === 'zupa') przepis.kolor = mieszajKolory(sredniKolor(k.dodane), '#e8c170', 0.35);
   if (przepis.typ === 'sok' && N.kolor) przepis.kolor = N.kolor;
   przepis.dziwne = ocenSmak(przepis, k.dodane);
+  // co mówią przyjaciele, kiedy zjedzą skarpetkę albo but
+  przepis.fujTeksty = [].concat(...k.dodane.map((sk) => SKLADNIKI[sk].fuj || []));
+  if (N.typ === 'rozek') zapiszLody();
   krokGotowy();
+}
+
+function otworzZakladke(k, nr) {
+  k.zakladka = nr;
+  k.rzeczy = ZAKLADKI_SPIZARNI[nr].skladniki.map((sk, i) => ({ sk, x: M.spizarnia[i].x, y: M.spizarnia[i].y, pojaw: -i * 0.04 }));
 }
 
 MECH.dowolne = {
   start(k) {
     k.dodane = [];
     k.trzymany = null;
-    k.rzeczy = SPIZARNIA.map((sk, i) => ({ sk, x: M.spizarnia[i].x, y: M.spizarnia[i].y, pojaw: -i * 0.04 }));
+    otworzZakladke(k, 0);
   },
   dotyk(k, x, y) {
+    for (let i = 0; i < M.zakladki.length; i++) {
+      const z = M.zakladki[i];
+      if (blisko(x, y, z.x, z.y, 46)) {
+        if (k.zakladka !== i) {
+          dzwiekKlik();
+          otworzZakladke(k, i);
+          powiedz(ZAKLADKI_SPIZARNI[i].nazwa);
+        }
+        return;
+      }
+    }
     for (const r of k.rzeczy) {
       if (blisko(x, y, r.x, r.y, 44)) {
         // bierzemy z półki kopię – w spiżarni zawsze czegoś jest pod dostatkiem
@@ -1935,12 +2258,6 @@ MECH.dowolne = {
       return;
     }
     const d = SKLADNIKI[ob.sk];
-    if (d.niejadalne) {
-      wroc();
-      dzwiekNieTo();
-      powiedz(`Ha ha! ${d.nazwa}? Tego się nie je!`);
-      return;
-    }
     if (k.dodane.length >= NAJWIECEJ_SKLADNIKOW) {
       wroc();
       powiedz('Już pełno! Stuknij: Gotowe!');
@@ -1948,7 +2265,7 @@ MECH.dowolne = {
     }
     dodajDowolny(ob.sk, ob.x, ob.y);
     k.dodane.push(ob.sk);
-    powiedz(d.nazwa);
+    powiedz(d.niejadalne ? `Ha ha! ${d.nazwa}!` : d.nazwa);
   },
   update(k, dt) {
     for (const r of k.rzeczy) r.pojaw = Math.min(1, r.pojaw + dt * 4);
@@ -1964,6 +2281,17 @@ MECH.dowolne = {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
     zaokraglony(x0, y0, x1 - x0, y1 - y0, 26);
     ctx.fill();
+    // zakładki: warzywa, owoce, inne, śmieszne rzeczy
+    M.zakladki.forEach((z, i) => {
+      const wybrana = k.zakladka === i;
+      ctx.fillStyle = wybrana ? '#ffd23f' : 'rgba(255,255,255,0.85)';
+      kolo(z.x, z.y, wybrana ? 40 : 34);
+      ctx.fill();
+      ctx.strokeStyle = wybrana ? '#f4a300' : 'rgba(0,0,0,0.08)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      rysujEmotke(ZAKLADKI_SPIZARNI[i].ikona, z.x, z.y, wybrana ? 46 : 38);
+    });
     for (const r of k.rzeczy) {
       const wiel = 62 * sprezyna(Math.max(0, r.pojaw));
       if (wiel <= 1) continue;
@@ -2009,19 +2337,31 @@ function pokazKsiazke() {
   ucisz();
 }
 
+// Wszystkie składniki przepisu (razem z tymi do wyboru)
+function skladnikiPrzepisu(p) {
+  const lista = [];
+  const dodaj = (sk) => {
+    if (sk && !lista.includes(sk)) lista.push(sk);
+  };
+  for (const k of p.kroki) {
+    dodaj(k.skladnik);
+    for (const o of k.opcje || []) dodaj(o.skladnik);
+  }
+  return lista;
+}
+
 function wybierzPrzepis(p) {
-  przepis = p;
+  // kopia, bo w czasie gotowania przepis się zmienia (np. wybrane dodatki do naleśnika)
+  przepis = JSON.parse(JSON.stringify(p));
   ekran = 'wstep';
   zaslona = 1;
   bezczynnosc = 0;
-  const nazwy = [];
-  for (const k of p.kroki) {
-    if (k.skladnik && !nazwy.includes(SKLADNIKI[k.skladnik].nazwa.toLowerCase())) nazwy.push(SKLADNIKI[k.skladnik].nazwa.toLowerCase());
-  }
-  powiedz(`${p.nazwa}! Potrzebujemy: ${nazwy.join(', ')}. Gotujemy?`);
+  const nazwy = skladnikiPrzepisu(p).map((sk) => SKLADNIKI[sk].nazwa.toLowerCase());
+  powiedz(nazwy.length ? `${p.nazwa}! Potrzebujemy: ${nazwy.join(', ')}. Gotujemy?` : `${p.nazwa}! Robimy?`);
 }
 
-function pokazWybor() {
+function pokazWybor(rodzaj = 'wlasna') {
+  rodzajWyboru = rodzaj;
   ekran = 'wybor';
   zaslona = 1;
   K = null;
@@ -2030,7 +2370,7 @@ function pokazWybor() {
   lecace = [];
   efekty = [];
   bezczynnosc = 0;
-  powiedz('Co chcesz ugotować? Wybierz!');
+  powiedz(rodzaj === 'zupy' ? 'Jaką zupę ugotujemy? Wybierz!' : 'Co chcesz ugotować? Wybierz!');
 }
 
 function wybierzWlasna(w) {
@@ -2067,8 +2407,57 @@ function zacznijKrok(zPochwala) {
   powiedz((zPochwala ? pochwala() + ' ' : '') + def.tekst);
 }
 
+// Czasem ktoś z przyjaciół zagląda przez okno, bo ładnie pachnie
+function zaprosPodgladacza() {
+  if (podgladacz) return;
+  const p = PRZYJACIELE[Math.floor(Math.random() * PRZYJACIELE.length)];
+  podgladacz = { z: { ...p, i: 0, oczy: 'w', buzia: 0, jezyk: p.typ === 'piesek', t: 0, skok: 0, przechyl: 0 }, t: 0 };
+}
+
+function wysuniecieZaOkna() {
+  const t = podgladacz.t;
+  if (t < 0.5) return sprezyna(t / 0.5);
+  if (t > 3) return Math.max(0, 1 - (t - 3) / 0.5);
+  return 1;
+}
+
+function aktualizujPodgladacza(dt) {
+  if (!podgladacz) return;
+  podgladacz.t += dt;
+  const z = podgladacz.z;
+  z.t += dt;
+  z.przechyl = Math.sin(z.t * 3) * 0.12;
+  if (podgladacz.t > 3.5) podgladacz = null;
+}
+
+function rysujPodgladacza() {
+  if (!podgladacz) return;
+  const o = M.okno;
+  const s = o.w / 260;
+  const w = wysuniecieZaOkna();
+  const x = o.x + o.w / 2;
+  const baza = o.y + o.h + 40 * s + (1 - w) * 160 * s;
+  ctx.save();
+  zaokraglony(o.x, o.y, o.w, o.h, 8);
+  ctx.clip();
+  rysujZwierzaka(podgladacz.z, x, baza, s);
+  ctx.restore();
+  if (w > 0.7) rysujLapki(podgladacz.z, x, o.y + o.h + 4, s);
+}
+
+function dotykOkna(x, y) {
+  const o = M.okno;
+  if (!podgladacz || x < o.x || x > o.x + o.w || y < o.y || y > o.y + o.h + 30) return false;
+  podgladacz.t = Math.min(podgladacz.t, 0.6);
+  podgladacz.z.skok = 0;
+  dzwiekZwierzaka(podgladacz.z.typ);
+  serduszka(o.x + o.w / 2, o.y + 20, 3);
+  return true;
+}
+
 function krokGotowy() {
   if (!K || K.gotowe) return;
+  if (['gotuj', 'piecz', 'smaz'].includes(K.def.co) || Math.random() < 0.3) zaprosPodgladacza();
   K.gotowe = true;
   K.poGotowym = 0;
   chwyt = null;
@@ -2094,6 +2483,11 @@ function noweZwierzaki() {
   }));
 }
 
+// Wszystko, co jest w potrawie (żeby przyjaciele wiedzieli, czy jest tam ich ulubione)
+function coJestWPotrawie() {
+  return new Set([...skladnikiPrzepisu(przepis), ...(przepis.wybrane || []), ...(przepis.wPorcji || []), ...(przepis.smaki || [])]);
+}
+
 function zacznijStol() {
   ekran = 'stol';
   zaslona = 1;
@@ -2106,6 +2500,8 @@ function zacznijStol() {
   N.pojaw = 1;
   N.naStole = true;
   zwierzaki = noweZwierzaki();
+  const wPotrawie = coJestWPotrawie();
+  for (const z of zwierzaki) z.ulubiony = (z.ulubione || []).find((sk) => wPotrawie.has(sk)) || null;
   ustawNapis('Poczęstuj przyjaciół! Stuknij w talerzyk');
   powiedz(`${pochwala()} Gotowe! Teraz poczęstuj przyjaciół. Stuknij w talerzyk!`);
   bezczynnosc = 0;
@@ -2186,7 +2582,9 @@ function aktualizujZwierzaki(dt) {
         z.stan = 'skrzywiony';
         z.t3 = 0;
         z.drzenie = 0;
-        const slowo = FUJ[Math.floor(Math.random() * FUJ.length)];
+        const teksty = przepis.fujTeksty && przepis.fujTeksty.length ? przepis.fujTeksty : FUJ;
+        const slowo = teksty[Math.floor(Math.random() * teksty.length)];
+        if (przepis.fujTeksty && przepis.fujTeksty.length) z.dymek = { tekst: slowo, t: 0 };
         setTimeout(() => powiedz(slowo, z.glos, 1.05), 300);
       }
     } else if (z.stan === 'je') {
@@ -2202,25 +2600,40 @@ function aktualizujZwierzaki(dt) {
         dzwiekMniam();
         dodajEfekt({ typ: 'napis', tekst: 'mniam!', x: zx + losowa(-30, 30), y: M.zwY - 220 * M.zwS, vy: -50, zycie: 0.9, rozmiar: 24, kolor: '#ff7b54' });
       }
+      if (przepis.id === 'lody') {
+        // lody się liże
+        z.buzia = 0;
+        z.jezyk = Math.sin(z.t2 * 9) > -0.2;
+        z.przechyl = Math.sin(z.t2 * 4.5) * 0.12;
+      }
       if (z.t2 >= 2.4) {
         z.stan = 'zadowolony';
         z.t3 = 0;
         z.buzia = 0;
         dzwiekZwierzaka(z.typ);
-        setTimeout(() => powiedz(z.mowi, z.glos, 1.05), 600);
-        serduszka(zx, M.zwY - 200 * M.zwS, 4);
+        // ulubione jedzenie = wielka radość
+        const slowa = z.ulubiony ? 'Moje ulubione!' : z.mowi;
+        setTimeout(() => powiedz(slowa, z.glos, 1.05), 600);
+        serduszka(zx, M.zwY - 200 * M.zwS, z.ulubiony ? 9 : 4);
+        if (z.ulubiony) dodajEfekt({ typ: 'napis', tekst: 'ulubione!', x: zx, y: M.zwY - 250 * M.zwS, vy: -40, zycie: 1.6, rozmiar: 26, kolor: '#ff5a7a' });
       }
     } else if (z.stan === 'zadowolony') {
       z.t3 += dt;
       z.oczy = 'w';
       z.jezyk = z.typ === 'piesek';
       z.merdanie = true;
-      z.skok = z.t3 < 0.6 ? Math.sin(z.t3 / 0.6 * Math.PI) * 40 : 0;
+      // z ulubionym jedzeniem skacze dwa razy wyżej i dłużej
+      const skoki = z.ulubiony ? 1.8 : 0.6;
+      z.skok = z.t3 < skoki ? Math.abs(Math.sin(z.t3 / 0.6 * Math.PI)) * (z.ulubiony ? 60 : 40) : 0;
       z.przechyl = Math.sin(z.t * 3) * 0.08;
       if (Math.random() < dt * 0.4) serduszka(zx, M.zwY - 200 * M.zwS, 1);
     } else if (z.stan === 'skrzywiony') {
       // kręci głową: nie, nie, to mi nie smakuje
       z.t3 += dt;
+      if (z.dymek) {
+        z.dymek.t += dt;
+        if (z.dymek.t > 3.5) z.dymek = null;
+      }
       z.fuj = true;
       z.oczy = z.t3 < 1.2 ? 'k' : 'o';
       z.drzenie = z.t3 < 0.5 ? Math.sin(z.t3 * 45) * 5 : 0;
@@ -2228,6 +2641,7 @@ function aktualizujZwierzaki(dt) {
       z.skok = 0;
     }
   }
+  for (const z of zwierzaki) poGlaskaniu(z, dt);
   // wszyscy najedzeni?
   if (ekran === 'stol' && zwierzaki.every((z) => z.stan === 'zadowolony' || z.stan === 'skrzywiony')) {
     if (!brawoOd) brawoOd = czas;
@@ -2299,18 +2713,22 @@ function rysujGornePrzyciski() {
 //   EKRANY
 // =====================================================
 // ---------- Książka kucharska ----------
+// Karty w rzędach: na leżąco 1 albo 2 rzędy, na stojąco 2 albo 3 kolumny
 function ukladKart(lista) {
   const n = lista.length;
-  if (!V.pion) {
-    const kw = Math.min(215, (V.w - 80) / n - 16);
-    const odst = kw + 18;
-    return lista.map((p, i) => ({ p, x: V.w / 2 + (i - (n - 1) / 2) * odst, y: 345, w: kw, h: 290 }));
-  }
-  const dy = Math.min(290, (V.h - 330 - 330) / 2);
+  const kol = V.pion ? (n > 6 ? 3 : 2) : (n > 6 ? Math.ceil(n / 2) : n);
+  const rzedy = Math.ceil(n / kol);
+  const gora = V.pion ? 250 : 170;
+  const dol = V.h - (V.pion ? 210 : 150);
+  const odstY = Math.min(V.pion ? 300 : 330, (dol - gora) / rzedy);
+  const kh = Math.min(V.pion ? 270 : 290, odstY - 18);
+  const kw = Math.min(V.pion ? 345 : 215, (V.w - 60) / kol - 16);
+  const gora0 = gora + ((dol - gora) - odstY * rzedy) / 2;
   return lista.map((p, i) => {
-    const rzad = Math.floor(i / 2);
-    const ostatni = i === n - 1 && n % 2 === 1;
-    return { p, x: ostatni ? 400 : (i % 2 ? 590 : 210), y: 340 + rzad * dy, w: 345, h: 250 };
+    const rzad = Math.floor(i / kol);
+    const wRzedzie = Math.min(kol, n - rzad * kol);
+    const k = i % kol;
+    return { p, x: V.w / 2 + (k - (wRzedzie - 1) / 2) * (kw + 16), y: gora0 + odstY * (rzad + 0.5), w: kw, h: kh };
   });
 }
 
@@ -2345,7 +2763,9 @@ function rysujKarte(k, wcisnieta, gwiazdki = true) {
   const rozmiar = dopasujRozmiarNapisu(p.nazwa, w - 24, 26);
   napis(p.nazwa, x, y + h * 0.2, rozmiar, przyciemnij(kolor, 0.8));
   if (gwiazdki) {
-    const ile = ugotowane[p.id] || 0;
+    const ile = p.id === 'zupy'
+      ? PRZEPISY.filter((q) => q.grupa === 'zupy').reduce((a, q) => a + (ugotowane[q.id] || 0), 0)
+      : ugotowane[p.id] || 0;
     for (let i = 0; i < 3; i++) rysujGwiazdke(x + (i - 1) * 34, y + h * 0.37, 14, i < ile);
   }
   ctx.restore();
@@ -2364,13 +2784,12 @@ function rysujLadeZeZwierzakami(lista, baza, s, odst) {
 function rysujKsiazke() {
   napis('Kuchnia Helenki', V.w / 2, V.pion ? 130 : 78, V.pion ? 66 : 62, '#ff7b54', 'center', '#ffffff');
   napis('Co dziś ugotujemy?', V.w / 2, V.pion ? 200 : 140, 30, '#b5651d');
-  for (const k of ukladKart([...PRZEPISY, MOJA_KARTA])) {
+  for (const k of ukladKart(kartyKsiazki())) {
     const id = 'karta-' + k.p.id;
     rysujKarte(k, czyWcisniety(id));
-    dodajPrzycisk(id, k.x, k.y, k.w, k.h, () => (k.p === MOJA_KARTA ? pokazWybor() : wybierzPrzepis(k.p)));
+    dodajPrzycisk(id, k.x, k.y, k.w, k.h, () => otworzKarte(k.p));
   }
-  const s = V.pion ? 0.62 : 0.8;
-  const odst = V.pion ? 150 : 200;
+  const { s, odst } = ladaZwierzakow();
   rysujLadeZeZwierzakami(zwierzakiKsiazki, V.h - 20, s, odst);
 }
 
@@ -2383,22 +2802,32 @@ function kartyWyboru() {
   });
 }
 
+function otworzKarte(p) {
+  if (p === MOJA_KARTA) pokazWybor('wlasna');
+  else if (p === KARTA_ZUP) pokazWybor('zupy');
+  else wybierzPrzepis(p);
+}
+
+function kartyZup() {
+  return PRZEPISY.filter((p) => p.grupa === 'zupy');
+}
+
 function rysujWybor() {
-  napis('Moja potrawa', V.w / 2, V.pion ? 130 : 78, V.pion ? 66 : 62, '#c77dff', 'center', '#ffffff');
-  napis('Co chcesz ugotować?', V.w / 2, V.pion ? 200 : 140, 30, '#b5651d');
-  for (const k of ukladKart(kartyWyboru())) {
-    const id = 'wybor-' + k.p.wlasna.typ;
-    rysujKarte(k, czyWcisniety(id), false);
-    dodajPrzycisk(id, k.x, k.y, k.w, k.h, () => wybierzWlasna(k.p.wlasna));
+  const zupy = rodzajWyboru === 'zupy';
+  napis(zupy ? 'Zupy' : 'Moja potrawa', V.w / 2, V.pion ? 130 : 78, V.pion ? 66 : 62, zupy ? '#ff7b54' : '#c77dff', 'center', '#ffffff');
+  napis(zupy ? 'Jaką zupę ugotujemy?' : 'Co chcesz ugotować?', V.w / 2, V.pion ? 200 : 140, 30, '#b5651d');
+  const lista = zupy ? kartyZup() : kartyWyboru();
+  for (const k of ukladKart(lista)) {
+    const id = 'wybor-' + (zupy ? k.p.id : k.p.wlasna.typ);
+    rysujKarte(k, czyWcisniety(id), zupy);
+    dodajPrzycisk(id, k.x, k.y, k.w, k.h, () => (zupy ? wybierzPrzepis(k.p) : wybierzWlasna(k.p.wlasna)));
   }
-  const s = V.pion ? 0.62 : 0.8;
-  const odst = V.pion ? 150 : 200;
+  const { s, odst } = ladaZwierzakow();
   rysujLadeZeZwierzakami(zwierzakiKsiazki, V.h - 20, s, odst);
 }
 
 function dotykKsiazka(x, y) {
-  const s = V.pion ? 0.62 : 0.8;
-  const odst = V.pion ? 150 : 200;
+  const { s, odst } = ladaZwierzakow();
   for (const z of zwierzakiKsiazki) {
     const zx = V.w / 2 + (z.i - 2) * odst;
     if (blisko(x, y, zx, V.h - 20 - 112 * s, 80 * s + 10)) {
@@ -2418,7 +2847,37 @@ function aktualizujZwierzakiKsiazki(dt) {
     z.przechyl = Math.sin(z.t * 1.2 + z.i) * 0.08;
     z.skok = z.t3 < 0.6 ? Math.sin(z.t3 / 0.6 * Math.PI) * 40 : Math.max(0, Math.sin(z.t * 2 + z.i * 1.3)) * 6;
     if (z.t3 < 1.2) z.oczy = 'w';
+    poGlaskaniu(z, dt);
   }
+}
+
+// ---------- Głaskanie: przesuń palcem po głowie przyjaciela ----------
+function glaszcz(lista, gdzie, x, y, d) {
+  for (const z of lista) {
+    const g = gdzie(z);
+    if (!blisko(x, y, g.x, g.y - 112 * g.s, 85 * g.s + 10)) continue;
+    z.glaszcze = 0.4;
+    z.glaskanie = (z.glaskanie || 0) + d;
+    if (z.glaskanie > 110) {
+      z.glaskanie = 0;
+      serduszka(g.x, g.y - 210 * g.s, 1);
+      if (z.typ === 'kotek') dzwiekMruczenia();
+      else dzwiekHihi();
+    }
+  }
+}
+
+// Głaskany przyjaciel zamyka oczy z radości i przechyla główkę
+function poGlaskaniu(z, dt) {
+  if (!z.glaszcze || z.glaszcze <= 0) return;
+  z.glaszcze -= dt;
+  z.oczy = 'w';
+  z.przechyl = Math.sin(czas * 5) * 0.14;
+}
+
+function ladaZwierzakow() {
+  const dwaRzedy = kartyKsiazki().length > 6 && !V.pion;
+  return { s: V.pion ? 0.62 : dwaRzedy ? 0.7 : 0.8, odst: V.pion ? 150 : 200 };
 }
 
 // ---------- Wstęp do przepisu ----------
@@ -2445,11 +2904,11 @@ function rysujWstep() {
   rysujPorcje(p, x, obrazekY, V.pion ? skala * 1.2 : skala, 1);
   // składniki
   const lista = [];
-  for (const k of p.kroki) if (k.skladnik && !lista.includes(k.skladnik)) lista.push(k.skladnik);
+  for (const sk of skladnikiPrzepisu(p)) lista.push(sk);
   const naRzad = V.pion ? 4 : 7;
   const odst = Math.min(100, (w - 40) / Math.min(naRzad, lista.length));
   const skY = V.pion ? obrazekY + 80 : y + 30;
-  napis('Potrzebujemy:', x, skY - 8, 22, '#9a8a7a');
+  if (lista.length) napis('Potrzebujemy:', x, skY - 8, 22, '#9a8a7a');
   lista.forEach((sk, i) => {
     const rzad = Math.floor(i / naRzad);
     const wRzedzie = Math.min(naRzad, lista.length - rzad * naRzad);
@@ -2478,6 +2937,9 @@ function ikonaKroku(def) {
     case 'wyciskaj': return '🍊';
     case 'jajko': return '🥚';
     case 'dowolne': return '🧺';
+    case 'wybierz': return '✨';
+    case 'galki': return '🍨';
+    case 'dekoruj': return '🍒';
     default: return SKLADNIKI[def.skladnik].obrazek;
   }
 }
@@ -2554,7 +3016,8 @@ function potrzebnaKuchenka() {
 function rysujGotowanie() {
   rysujOkno(M.okno.x, M.okno.y, M.okno.w, M.okno.h);
   rysujPolke(M.polkaDeko.x, M.polkaDeko.y, M.polkaDeko.w);
-  if (przepis.naczynie !== 'pizza' && !przepis.wlasny) rysujDeske(M.deska.x, M.deska.y + 24);
+  rysujPodgladacza();
+  if (!['pizza', 'talerz', 'rozek'].includes(N.typ) && !przepis.wlasny && przepis.id !== 'spaghetti') rysujDeske(M.deska.x, M.deska.y + 24);
   if (potrzebnaKuchenka()) {
     const p = pokretlo();
     const podswietl = K && K.def.co === 'gotuj' && K.faza === 'czeka' ? 0.6 + Math.sin(czas * 6) * 0.4 : 0;
@@ -2571,6 +3034,71 @@ function rysujGotowanie() {
 }
 
 // ---------- Stół ----------
+// Dymek z tym, co mówi przyjaciel (np. „Fuuu! To smakuje jak stara skarpeta!”)
+function rysujDymek(z, zx) {
+  const d = z.dymek;
+  const pojaw = sprezyna(Math.min(1, d.t * 4)) * Math.min(1, (3.5 - d.t) * 3);
+  if (pojaw <= 0.01) return;
+  const rozmiar = V.pion ? 17 : 19;
+  const maxW = V.pion ? 140 : 190;
+  ctx.font = `bold ${rozmiar}px ${CZCIONKA}`;
+  // dzielimy zdanie na linijki
+  const linie = [];
+  for (const slowo of d.tekst.split(' ')) {
+    const ost = linie[linie.length - 1];
+    if (ost && ctx.measureText(ost + ' ' + slowo).width < maxW) linie[linie.length - 1] = ost + ' ' + slowo;
+    else linie.push(slowo);
+  }
+  const w = Math.max(...linie.map((l) => ctx.measureText(l).width)) + 24;
+  const h = linie.length * rozmiar * 1.2 + 16;
+  const x = ogranicz(zx, w / 2 + 6, V.w - w / 2 - 6);
+  const y = M.zwY - 215 * M.zwS - h / 2;
+  ctx.save();
+  ctx.translate(x, y + h / 2);
+  ctx.scale(pojaw, pojaw);
+  ctx.translate(-x, -(y + h / 2));
+  ctx.fillStyle = '#ffffff';
+  zaokraglony(x - w / 2, y - h / 2, w, h, 16);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(zx - 10, y + h / 2 - 2);
+  ctx.lineTo(zx + 10, y + h / 2 - 2);
+  ctx.lineTo(zx, y + h / 2 + 14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#9bd77f';
+  ctx.lineWidth = 3;
+  zaokraglony(x - w / 2, y - h / 2, w, h, 16);
+  ctx.stroke();
+  linie.forEach((l, i) => napis(l, x, y - h / 2 + 8 + rozmiar * 0.6 + i * rozmiar * 1.2, rozmiar, '#3d8b37'));
+  ctx.restore();
+}
+
+// Chmurka nad głową: „wiem, co tu jest – to moje ulubione!”
+function rysujChmurke(z, zx) {
+  const s = M.zwS;
+  const x = zx + 62 * s;
+  const y = M.zwY - 245 * s + Math.sin(czas * 2 + z.i) * 4;
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  kolo(zx + 34 * s, M.zwY - 190 * s, 6 * s);
+  ctx.fill();
+  kolo(zx + 46 * s, M.zwY - 210 * s, 9 * s);
+  ctx.fill();
+  for (const [dx, dy, r] of [[-22, 4, 24], [0, -8, 30], [24, 2, 24], [0, 12, 24]]) {
+    kolo(x + dx * s, y + dy * s, r * s);
+    ctx.fill();
+  }
+  const smak = SMAKI_LODOW.find((l) => l.id === z.ulubiony);
+  if (smak) {
+    ctx.fillStyle = smak.kolor;
+    kolo(x, y, 20 * s);
+    ctx.fill();
+  } else {
+    rysujSkladnik(z.ulubiony, x, y, 42 * s);
+  }
+  rysujSerce(x + 26 * s, y - 20 * s, 9 * s);
+}
+
 function rysujStol() {
   rysujGirlande(-20, V.w + 20, V.pion ? 270 : 150);
   // zwierzaki
@@ -2586,13 +3114,16 @@ function rysujStol() {
       // pusty talerzyk czeka
       const p = { ...przepis };
       rysujPorcje(p, zx, M.porcjaY, M.porcjaS, 0);
+      if (z.ulubiony) rysujChmurke(z, zx);
     } else if (z.stan === 'je' || z.stan === 'zadowolony' || z.stan === 'skrzywiony') {
       rysujPorcje(przepis, zx, M.porcjaY, M.porcjaS, z.porcja);
     }
   }
+  for (const z of zwierzaki) if (z.dymek) rysujDymek(z, M.zwX[z.i]);
   // garnek z potrawą
   const d = M.danie;
-  rysujNaczynie(N, d.x, d.y - (N.typ === 'pizza' ? 0 : 60), d.s, czas);
+  if (N.typ === 'rozek') rysujNaczynie(N, d.x, d.y - 10, d.s * 0.75, czas);   // wysoki rożek – trochę mniejszy
+  else rysujNaczynie(N, d.x, d.y - (N.typ === 'pizza' || N.typ === 'talerz' ? 0 : 60), d.s, czas);
   if (N.goracy && Math.random() < 0.05) para(d.x + losowa(-40, 40), d.y - 80);
   rysujLecace();
 }
@@ -2660,7 +3191,7 @@ function rysujOjej() {
   ctx.restore();
   const by = y + h / 2 + 70 * pojaw;
   rysujPrzyciskTekst(x, by, 440, 84, 'Spróbuj jeszcze raz ▶', '#c77dff', 32, czyWcisniety('jeszcze'));
-  dodajPrzycisk('jeszcze', x, by, 440, 90, pokazWybor);
+  dodajPrzycisk('jeszcze', x, by, 440, 90, () => pokazWybor('wlasna'));
 }
 
 
@@ -2769,6 +3300,7 @@ function aktualizuj(dt) {
   aktualizujEfekty(dt);
   aktualizujBabelki(dt);
   aktualizujLecace(dt);
+  aktualizujPodgladacza(dt);
   if (ekran === 'gotowanie' && N) {
     N.pojaw = Math.min(1, N.pojaw + dt * 3);
     const grzeje = K && ((K.def.co === 'gotuj' && K.faza === 'gotuje') ||
@@ -2859,7 +3391,7 @@ plotno.addEventListener('pointerdown', (e) => {
     return;
   }
   if (ekran === 'gotowanie') {
-    if (trafBabelek(p.x, p.y)) return;
+    if (trafBabelek(p.x, p.y) || dotykOkna(p.x, p.y)) return;
     if (K && !K.gotowe) {
       const m = MECH[K.def.co];
       if (m.dotyk) m.dotyk(K, p.x, p.y);
@@ -2874,12 +3406,19 @@ plotno.addEventListener('pointerdown', (e) => {
 plotno.addEventListener('pointermove', (e) => {
   if (!wsk.wcisniety || e.pointerId !== wsk.id) return;
   const p = naWirtualne(e);
+  bezczynnosc = 0;
+  const d = Math.hypot(p.x - wsk.x, p.y - wsk.y);
   wsk.x = p.x;
   wsk.y = p.y;
-  bezczynnosc = 0;
   if (chwyt) {
     chwyt.x = p.x + chwyt.dx;
     chwyt.y = p.y + chwyt.dy;
+  }
+  if (ekran === 'ksiazka' || ekran === 'wybor') {
+    const { s, odst } = ladaZwierzakow();
+    glaszcz(zwierzakiKsiazki, (z) => ({ x: V.w / 2 + (z.i - 2) * odst, y: V.h - 20, s }), p.x, p.y, d);
+  } else if (ekran === 'stol' || ekran === 'brawo') {
+    glaszcz(zwierzaki.filter((z) => z.stan !== 'je'), (z) => ({ x: M.zwX[z.i], y: M.zwY, s: M.zwS }), p.x, p.y, d);
   }
   if (ekran === 'gotowanie' && K && !K.gotowe) {
     const m = MECH[K.def.co];
@@ -2918,14 +3457,15 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyM') przelaczDzwiek();
   else if (e.code === 'Escape' || e.code === 'KeyQ') wroc();
   else if ((e.code === 'Space' || e.code === 'Enter') && ekran === 'wstep') zacznijGotowanie();
-  else if ((e.code === 'Space' || e.code === 'Enter') && ekran === 'brawo') (przepis.dziwne ? pokazWybor() : pokazKsiazke());
+  else if ((e.code === 'Space' || e.code === 'Enter') && ekran === 'brawo') (przepis.dziwne ? pokazWybor('wlasna') : pokazKsiazke());
   else if (ekran === 'ksiazka') {
+    const karty = kartyKsiazki();
     const nr = parseInt(e.key, 10);
-    if (nr >= 1 && nr <= PRZEPISY.length) wybierzPrzepis(PRZEPISY[nr - 1]);
-    else if (nr === PRZEPISY.length + 1) pokazWybor();
+    if (nr >= 1 && nr <= karty.length) otworzKarte(karty[nr - 1]);
   } else if (ekran === 'wybor') {
     const nr = parseInt(e.key, 10);
-    if (nr >= 1 && nr <= WLASNE.length) wybierzWlasna(WLASNE[nr - 1]);
+    if (rodzajWyboru === 'zupy' && nr >= 1 && nr <= kartyZup().length) wybierzPrzepis(kartyZup()[nr - 1]);
+    else if (rodzajWyboru !== 'zupy' && nr >= 1 && nr <= WLASNE.length) wybierzWlasna(WLASNE[nr - 1]);
   }
 });
 

@@ -22,6 +22,13 @@
 //   uloz      – połóż dodatki na pizzy
 //   piecz     – włóż pizzę do piekarnika
 //   wyciskaj  – kręć pomarańczą na wyciskarce
+//   wybierz   – wybierasz jedną z kilku rzeczy (np. czym posmarować naleśnika);
+//               opcje: lista { skladnik, krok } – krok to, co się potem robi
+//   galki     – nakładasz gałki lodów (stukasz w pudełka)
+//   dekoruj   – posypujesz i dekorujesz lody
+//
+//  naczynie przy kroku – zmienia naczynie (np. makaron z garnka na talerz)
+//  grupa: 'zupy' – przepis jest w książce pod kartą „Zupy”
 //
 //  tekst – to mówi i pokazuje gra przy danym kroku
 
@@ -58,16 +65,47 @@ const SKLADNIKI = {
   sos:        { obrazek: '*sos', kolor: '#d8321f', nazwa: 'Sos pomidorowy' },
   dzem:       { obrazek: '*dzem', kolor: '#d61f4a', nazwa: 'Dżem' },
   salami:     { obrazek: '*salami', kolor: '#c0392b', nazwa: 'Salami' },
+  ogorek:     { obrazek: '🥒', kolor: '#7cb342', nazwa: 'Ogórek' },
+  burak:      { obrazek: '*burak', kolor: '#9b1b3f', nazwa: 'Burak' },
+  czosnek:    { obrazek: '🧄', kolor: '#f3ece0', nazwa: 'Czosnek' },
+  cebula:     { obrazek: '🧅', kolor: '#e8c08a', nazwa: 'Cebula' },
+  kurczak:    { obrazek: '🍗', kolor: '#e0a25a', nazwa: 'Kurczak' },
+  kielbasa:   { obrazek: '*kielbasa', kolor: '#b5533c', nazwa: 'Kiełbasa' },
+  jajkoGot:   { obrazek: '*jajkoGot', kolor: '#fff6d8', nazwa: 'Jajko na twardo' },
+  makaron:    { obrazek: '*makaron', kolor: '#f2d06b', nazwa: 'Makaron' },
+  smietana:   { obrazek: '*smietana', kolor: '#fffaf0', nazwa: 'Śmietana', rodzaj: 'plyn' },
+  pulpet:     { obrazek: '*pulpet', kolor: '#8a4b2a', nazwa: 'Klopsik' },
+  krem:       { obrazek: '*krem', kolor: '#5a3220', nazwa: 'Krem czekoladowy' },
+  cukier:     { obrazek: '*cukier', kolor: '#ffffff', nazwa: 'Cukier puder' },
 
-  // Śmieszne rzeczy, których się nie je – gra czasem kładzie je na blacie
-  but:        { obrazek: '👟', nazwa: 'But', niejadalne: true },
-  skarpetka:  { obrazek: '🧦', nazwa: 'Skarpetka', niejadalne: true },
-  mis:        { obrazek: '🧸', nazwa: 'Miś', niejadalne: true },
-  pilka:      { obrazek: '⚽', nazwa: 'Piłka', niejadalne: true },
+  // Dodatki do lodów
+  posypka:     { obrazek: '*posypka', nazwa: 'Kolorowa posypka' },
+  posypkaCzek: { obrazek: '*posypkaCzek', nazwa: 'Czekoladowa posypka' },
+  sosCzek:     { obrazek: '*sosCzek', kolor: '#5a3220', nazwa: 'Sos czekoladowy' },
+  sosTrusk:    { obrazek: '*sosTrusk', kolor: '#e8304a', nazwa: 'Sos truskawkowy' },
+  wisienka:    { obrazek: '🍒', kolor: '#c8102e', nazwa: 'Wisienka' },
+  wafelek:     { obrazek: '*wafelek', kolor: '#e2a860', nazwa: 'Wafelek' },
+
+  // Śmieszne rzeczy, których się nie je – leżą na blacie i w spiżarni (dla zabawy!)
+  // fuj: co mówią przyjaciele, kiedy ktoś im to ugotuje
+  skarpetka:  { obrazek: '🧦', kolor: '#8fb3d9', nazwa: 'Skarpetka', niejadalne: true,
+                fuj: ['Fuuu! To smakuje jak stara skarpeta!', 'Bleee! Śmierdząca skarpeta!'] },
+  but:        { obrazek: '👟', kolor: '#4a90d9', nazwa: 'But', niejadalne: true,
+                fuj: ['Bleee! To smakuje jak stary but!', 'Fuj! Gumowa podeszwa!'] },
+  szalik:     { obrazek: '🧣', kolor: '#e74c3c', nazwa: 'Szalik', niejadalne: true,
+                fuj: ['Fuj! Szalik drapie mnie w język!', 'Bleee! Pełno włóczki w buzi!'] },
+  kartka:     { obrazek: '📄', kolor: '#f2f2f2', nazwa: 'Kartka papieru', niejadalne: true,
+                fuj: ['Bleee! To smakuje jak papier!', 'Fuj! Sucha kartka!'] },
+  kredka:     { obrazek: '🖍️', kolor: '#ff9f1c', nazwa: 'Kredka', niejadalne: true,
+                fuj: ['Fuj! Mam kolorowy język!', 'Bleee! Kredki są do rysowania!'] },
+  mis:        { obrazek: '🧸', kolor: '#b5733c', nazwa: 'Miś', niejadalne: true,
+                fuj: ['Ojej! Misia się nie je!', 'Fuj! Pluszowe futerko!'] },
+  pilka:      { obrazek: '⚽', kolor: '#dddddd', nazwa: 'Piłka', niejadalne: true,
+                fuj: ['Bleee! Gumowa piłka!', 'Fuj! Twarde jak piłka!'] },
 };
 
 // Co jeszcze może leżeć na blacie, żeby było z czego wybierać
-const NA_BLACIE = ['ziemniak', 'brokul', 'chleb', 'gruszka', 'cytryna', 'winogrona', 'but', 'skarpetka', 'mis', 'pilka'];
+const NA_BLACIE = ['ziemniak', 'brokul', 'chleb', 'gruszka', 'cytryna', 'winogrona', 'but', 'skarpetka', 'mis', 'pilka', 'szalik', 'kartka', 'kredka'];
 
 
 // ---------- PRZEPISY ----------
@@ -76,8 +114,10 @@ const NA_BLACIE = ['ziemniak', 'brokul', 'chleb', 'gruszka', 'cytryna', 'winogro
 // kolor: jaki kolor ma gotowa potrawa
 // wPorcji: jakie kawałki widać w porcji
 const PRZEPISY = [
+  // ---------- ZUPY (w książce pod kartą „Zupy”) ----------
   {
     id: 'zupa',
+    grupa: 'zupy',
     nazwa: 'Zupa pomidorowa',
     naczynie: 'garnek',
     porcja: 'miseczka',
@@ -94,6 +134,79 @@ const PRZEPISY = [
     ],
   },
   {
+    id: 'rosol',
+    grupa: 'zupy',
+    nazwa: 'Rosół',
+    naczynie: 'garnek',
+    porcja: 'miseczka',
+    kolor: '#f2c14e',
+    wPorcji: ['makaron', 'marchewka', 'pietruszka'],
+    kroki: [
+      { co: 'polej', skladnik: 'woda', tekst: 'Nalej wody do garnka' },
+      { co: 'wrzuc', skladnik: 'kurczak', ile: 1, tekst: 'Znajdź kurczaka i wrzuć go do garnka' },
+      { co: 'kroj', skladnik: 'marchewka', ile: 3, tekst: 'Pokrój marchewkę' },
+      { co: 'wrzuc', skladnik: 'pietruszka', ile: 1, tekst: 'Znajdź pietruszkę i wrzuć ją do garnka' },
+      { co: 'gotuj', tekst: 'Włącz kuchenkę' },
+      { co: 'wrzuc', skladnik: 'makaron', ile: 1, tekst: 'Dodaj makaron' },
+      { co: 'mieszaj', ile: 2, tekst: 'Zamieszaj rosół łyżką' },
+    ],
+  },
+  {
+    id: 'ogorkowa',
+    grupa: 'zupy',
+    nazwa: 'Ogórkowa',
+    naczynie: 'garnek',
+    porcja: 'miseczka',
+    kolor: '#d4d79a',
+    wPorcji: ['ogorek', 'ziemniak', 'marchewka'],
+    kroki: [
+      { co: 'polej', skladnik: 'woda', tekst: 'Nalej wody do garnka' },
+      { co: 'kroj', skladnik: 'ziemniak', ile: 3, tekst: 'Pokrój ziemniaka' },
+      { co: 'kroj', skladnik: 'ogorek', ile: 3, tekst: 'Pokrój ogórka' },
+      { co: 'kroj', skladnik: 'marchewka', ile: 2, tekst: 'Pokrój marchewkę' },
+      { co: 'gotuj', tekst: 'Włącz kuchenkę' },
+      { co: 'polej', skladnik: 'smietana', tekst: 'Dodaj śmietanę' },
+      { co: 'mieszaj', ile: 2, tekst: 'Zamieszaj zupę łyżką' },
+    ],
+  },
+  {
+    id: 'barszcz',
+    grupa: 'zupy',
+    nazwa: 'Barszcz czerwony',
+    naczynie: 'garnek',
+    porcja: 'miseczka',
+    kolor: '#a3123a',
+    wPorcji: ['burak', 'marchewka'],
+    kroki: [
+      { co: 'polej', skladnik: 'woda', tekst: 'Nalej wody do garnka' },
+      { co: 'kroj', skladnik: 'burak', ile: 3, tekst: 'Pokrój buraka' },
+      { co: 'kroj', skladnik: 'marchewka', ile: 2, tekst: 'Pokrój marchewkę' },
+      { co: 'wrzuc', skladnik: 'czosnek', ile: 1, tekst: 'Znajdź czosnek i wrzuć go do garnka' },
+      { co: 'gotuj', tekst: 'Włącz kuchenkę' },
+      { co: 'mieszaj', ile: 2, tekst: 'Zamieszaj barszcz łyżką' },
+    ],
+  },
+  {
+    id: 'zurek',
+    grupa: 'zupy',
+    nazwa: 'Żurek',
+    naczynie: 'garnek',
+    porcja: 'miseczka',
+    kolor: '#e3d3ad',
+    wPorcji: ['jajkoGot', 'kielbasa', 'ziemniak'],
+    kroki: [
+      { co: 'polej', skladnik: 'woda', tekst: 'Nalej wody do garnka' },
+      { co: 'kroj', skladnik: 'kielbasa', ile: 3, tekst: 'Pokrój kiełbasę' },
+      { co: 'kroj', skladnik: 'ziemniak', ile: 3, tekst: 'Pokrój ziemniaka' },
+      { co: 'gotuj', tekst: 'Włącz kuchenkę' },
+      { co: 'polej', skladnik: 'smietana', tekst: 'Dodaj śmietanę' },
+      { co: 'kroj', skladnik: 'jajkoGot', ile: 1, tekst: 'Przekrój jajko na pół' },
+      { co: 'mieszaj', ile: 2, tekst: 'Zamieszaj żurek łyżką' },
+    ],
+  },
+
+  // ---------- INNE POTRAWY ----------
+  {
     id: 'nalesniki',
     nazwa: 'Naleśniki',
     naczynie: 'miska',
@@ -105,7 +218,16 @@ const PRZEPISY = [
       { co: 'polej', skladnik: 'maka', tekst: 'Wsyp mąkę' },
       { co: 'mieszaj', ile: 3, tekst: 'Wymieszaj ciasto', przybor: 'trzepaczka' },
       { co: 'smaz', naczynie: 'patelnia', tekst: 'Wylej ciasto na patelnię. Stuknij w patelnię!' },
-      { co: 'smaruj', skladnik: 'dzem', tekst: 'Posmaruj naleśnika dżemem. Maluj palcem!' },
+      {
+        co: 'wybierz',
+        tekst: 'Czym posmarować naleśnika? Wybierz!',
+        tekstPotem: 'Coś jeszcze? Wybierz albo stuknij Gotowe',
+        opcje: [
+          { skladnik: 'dzem', krok: { co: 'smaruj', skladnik: 'dzem', tekst: 'Posmaruj naleśnika dżemem. Maluj palcem!' } },
+          { skladnik: 'krem', krok: { co: 'smaruj', skladnik: 'krem', tekst: 'Posmaruj naleśnika kremem czekoladowym!' } },
+          { skladnik: 'cukier', krok: { co: 'smaruj', skladnik: 'cukier', tekst: 'Posyp naleśnika cukrem pudrem. Maluj palcem!' } },
+        ],
+      },
     ],
   },
   {
@@ -140,6 +262,35 @@ const PRZEPISY = [
     ],
   },
   {
+    id: 'spaghetti',
+    nazwa: 'Spaghetti',
+    naczynie: 'garnek',
+    porcja: 'spaghetti',
+    kolor: '#d8321f',
+    kroki: [
+      { co: 'polej', skladnik: 'woda', tekst: 'Nalej wody do garnka' },
+      { co: 'wrzuc', skladnik: 'makaron', ile: 1, tekst: 'Znajdź makaron i wrzuć go do garnka' },
+      { co: 'polej', skladnik: 'sol', tekst: 'Posól wodę' },
+      { co: 'gotuj', tekst: 'Włącz kuchenkę' },
+      { co: 'smaruj', skladnik: 'sos', naczynie: 'talerz', tekst: 'Polej makaron sosem. Maluj palcem!' },
+      { co: 'smaruj', skladnik: 'ser', tekst: 'Posyp spaghetti serem' },
+      { co: 'uloz', skladnik: 'pulpet', ile: 3, tekst: 'Połóż na makaronie klopsiki' },
+    ],
+  },
+  {
+    id: 'lody',
+    nazwa: 'Lody',
+    naczynie: 'rozek',
+    porcja: 'lody',
+    kolor: null,
+    galki: ['#ff9fb5', '#7b4a2a', '#b8db8a'],   // tak wyglądają na karcie w książce
+    wisienka: true,
+    kroki: [
+      { co: 'galki', ile: 3, tekst: 'Wybierz smaki lodów! Stuknij w pudełko' },
+      { co: 'dekoruj', tekst: 'Udekoruj lody! Stuknij, co chcesz' },
+    ],
+  },
+  {
     id: 'sok',
     nazwa: 'Sok pomarańczowy',
     naczynie: 'dzbanek',
@@ -157,12 +308,14 @@ const PRZEPISY = [
 
 // ---------- PRZYJACIELE ----------
 // Kto przychodzi na obiad. glos: jak wysoko mówi (1 = zwykle, 2 = bardzo piskliwie)
+// ulubione: co każdy najbardziej lubi (składniki i smaki lodów).
+// Jak to jest w potrawie, przyjaciel pokazuje to w chmurce i bardzo się cieszy.
 const PRZYJACIELE = [
-  { typ: 'panda', imie: 'Panda', glos: 0.9, mowi: 'Pycha!' },
-  { typ: 'jez', imie: 'Jeżyk', glos: 1.6, mowi: 'Mniam, mniam!' },
-  { typ: 'malpka', imie: 'Małpka', glos: 1.8, mowi: 'Pyszne!' },
-  { typ: 'kotek', imie: 'Kotek', glos: 1.5, mowi: 'Dziękuję!' },
-  { typ: 'piesek', imie: 'Piesek', glos: 1.2, mowi: 'Super!' },
+  { typ: 'panda', imie: 'Panda', glos: 0.9, mowi: 'Pycha!', ulubione: ['jablko', 'pistacjowe', 'ogorek'] },
+  { typ: 'jez', imie: 'Jeżyk', glos: 1.6, mowi: 'Mniam, mniam!', ulubione: ['pieczarka', 'jagody', 'jagodowe', 'jablko'] },
+  { typ: 'malpka', imie: 'Małpka', glos: 1.8, mowi: 'Pyszne!', ulubione: ['banan', 'czekoladowe', 'krem'] },
+  { typ: 'kotek', imie: 'Kotek', glos: 1.5, mowi: 'Dziękuję!', ulubione: ['smietana', 'mleko', 'ser', 'waniliowe'] },
+  { typ: 'piesek', imie: 'Piesek', glos: 1.2, mowi: 'Super!', ulubione: ['kielbasa', 'pulpet', 'kurczak', 'salami', 'truskawkowe'] },
 ];
 
 const POCHWALY = ['Super!', 'Brawo!', 'Świetnie!', 'Pięknie!', 'Ekstra!', 'Wspaniale!'];
@@ -174,23 +327,28 @@ const POCHWALY = ['Super!', 'Brawo!', 'Świetnie!', 'Pięknie!', 'Ekstra!', 'Wsp
 
 // Jak coś smakuje: 'slodki' (owoce), 'slony' (warzywa, wędlina),
 // 'neutralny' (pasuje do wszystkiego), 'zimny' (pasuje tylko do soku)
+// 'zimny' (pasuje tylko do soku i lodów). Rzeczy niejadalne zawsze smakują okropnie!
 const SMAKI = {
   pomidor: 'slony', marchewka: 'slony', pietruszka: 'slony', ziemniak: 'slony',
-  brokul: 'slony', pieczarka: 'slony', salami: 'slony',
+  brokul: 'slony', pieczarka: 'slony', salami: 'slony', ogorek: 'slony', burak: 'slony',
+  czosnek: 'slony', cebula: 'slony', kurczak: 'slony', kielbasa: 'slony', pulpet: 'slony',
+  jajkoGot: 'slony',
   banan: 'slodki', jablko: 'slodki', truskawka: 'slodki', jagody: 'slodki',
   winogrona: 'slodki', pomarancza: 'slodki', cytryna: 'slodki', gruszka: 'slodki',
-  ser: 'neutralny', chleb: 'neutralny',
+  krem: 'slodki', miod: 'slodki',
+  ser: 'neutralny', chleb: 'neutralny', makaron: 'neutralny', smietana: 'neutralny',
   lod: 'zimny',
 };
 
 // Warzywa, z których też robi się sok (sok marchewkowy jest pyszny!)
-const DO_SOKU_TEZ = ['pomidor', 'marchewka'];
+const DO_SOKU_TEZ = ['pomidor', 'marchewka', 'burak'];
 
-// Co stoi w spiżarni – z tego wybierasz składniki do swojej potrawy
-const SPIZARNIA = [
-  'pomidor', 'marchewka', 'ziemniak', 'brokul', 'pieczarka', 'pietruszka',
-  'ser', 'salami', 'chleb', 'banan', 'jablko', 'truskawka',
-  'jagody', 'winogrona', 'pomarancza', 'gruszka', 'lod', 'skarpetka',
+// Spiżarnia ma zakładki – w każdej najwyżej 12 rzeczy
+const ZAKLADKI_SPIZARNI = [
+  { ikona: '🥕', nazwa: 'Warzywa', skladniki: ['pomidor', 'marchewka', 'ziemniak', 'ogorek', 'brokul', 'pieczarka', 'burak', 'cebula', 'czosnek', 'pietruszka'] },
+  { ikona: '🍎', nazwa: 'Owoce', skladniki: ['banan', 'jablko', 'truskawka', 'jagody', 'winogrona', 'pomarancza', 'gruszka', 'cytryna'] },
+  { ikona: '🧀', nazwa: 'Inne', skladniki: ['ser', 'salami', 'kielbasa', 'kurczak', 'pulpet', 'jajkoGot', 'makaron', 'chleb', 'smietana', 'krem', 'miod', 'lod'] },
+  { ikona: '🧦', nazwa: 'Śmieszne rzeczy', skladniki: ['skarpetka', 'but', 'szalik', 'kartka', 'kredka', 'mis', 'pilka'] },
 ];
 
 // Rodzaje własnych potraw.
@@ -236,6 +394,17 @@ const WLASNE = [
     ],
   },
   {
+    typ: 'spaghetti', nazwa: 'Moje spaghetti', naczynie: 'garnek', porcja: 'spaghetti', kolor: '#d8321f',
+    gdzie: 'na spaghetti', smak: 'slony',
+    kroki: [
+      { co: 'polej', skladnik: 'woda', tekst: 'Nalej wody do garnka' },
+      { co: 'wrzuc', skladnik: 'makaron', ile: 1, tekst: 'Znajdź makaron i wrzuć go do garnka' },
+      { co: 'gotuj', tekst: 'Włącz kuchenkę' },
+      { co: 'smaruj', skladnik: 'sos', naczynie: 'talerz', tekst: 'Polej makaron sosem. Maluj palcem!' },
+      { co: 'dowolne', tekst: 'Połóż na makaronie, co chcesz!' },
+    ],
+  },
+  {
     typ: 'sok', nazwa: 'Mój sok', naczynie: 'dzbanek', porcja: 'szklanka', kolor: '#ffa62b',
     gdzie: 'w soku', smak: 'slodki',
     kroki: [
@@ -243,7 +412,32 @@ const WLASNE = [
       { co: 'mieszaj', ile: 2, tekst: 'Zamieszaj sok' },
     ],
   },
+  {
+    typ: 'lody', nazwa: 'Moje lody', naczynie: 'rozek', porcja: 'lody', kolor: null,
+    gdzie: 'na lodach', smak: 'slodki',
+    kroki: [
+      { co: 'galki', ile: 3, tekst: 'Wybierz smaki lodów! Stuknij w pudełko' },
+      { co: 'dowolne', tekst: 'Połóż na lodach, co chcesz!' },
+    ],
+  },
 ];
 
 // Co mówią przyjaciele, kiedy coś im nie smakuje
 const FUJ = ['Bleee!', 'Fuj!', 'Ojej!', 'Dziwne!', 'Brrr!'];
+
+
+// =====================================================
+//   LODY
+// =====================================================
+// Smaki lodów: kolor gałki i obrazek na pudełku
+const SMAKI_LODOW = [
+  { id: 'waniliowe', nazwa: 'Waniliowe', kolor: '#fff1c1', ikona: '🍦' },
+  { id: 'czekoladowe', nazwa: 'Czekoladowe', kolor: '#7b4a2a', ikona: '🍫' },
+  { id: 'truskawkowe', nazwa: 'Truskawkowe', kolor: '#ff9fb5', ikona: '🍓' },
+  { id: 'pistacjowe', nazwa: 'Pistacjowe', kolor: '#b8db8a', ikona: '🥜' },
+  { id: 'mietowe', nazwa: 'Miętowe', kolor: '#9fe8d2', ikona: '🌿' },
+  { id: 'jagodowe', nazwa: 'Jagodowe', kolor: '#a99ae8', ikona: '🫐' },
+];
+
+// Czym można udekorować lody
+const DEKORACJE_LODOW = ['posypka', 'posypkaCzek', 'sosCzek', 'sosTrusk', 'wisienka', 'wafelek'];

@@ -105,7 +105,11 @@ Krainy: Słoneczna Łąka, Grzybowy Las, Gorąca Pustynia, Lodowa Kraina (ślisk
 
 Gra dla Helenki. Wybierasz przepis z książki kucharskiej i gotujesz krok po kroku, a na końcu częstujesz przyjaciół: pandę, jeżyka, małpkę, kotka i pieska. Nie ma pośpiechu i nie da się przegrać. Gra mówi, co trzeba zrobić, a jak długo nic się nie dzieje, rączka pokazuje, gdzie stuknąć.
 
-Przepisy: zupa pomidorowa, naleśniki, sałatka owocowa, pizza i sok pomarańczowy.
+Przepisy:
+- **Zupy** (5 najpopularniejszych w Polsce): pomidorowa, rosół, ogórkowa, barszcz czerwony i żurek,
+- **naleśniki**: na koniec wybierasz, czym je posmarować: dżem, krem czekoladowy, cukier puder (można wszystko po kolei),
+- **sałatka owocowa**, **pizza**, **spaghetti** z sosem, parmezanem i klopsikami, **sok pomarańczowy**,
+- **lody**: wybierasz do 3 gałek (6 smaków), a potem dekorujesz posypką, sosem, wisienką i wafelkiem.
 
 | Co robisz | Jak |
 |---|---|
@@ -118,18 +122,22 @@ Przepisy: zupa pomidorowa, naleśniki, sałatka owocowa, pizza i sok pomarańczo
 
 | Klawisze | Co robią |
 |---|---|
-| `1` – `6` | wybór przepisu (`6` to Moja potrawa) |
+| `1` – `8` | wybór karty w książce (`1` to Zupy, `8` to Moja potrawa) |
 | `Esc` / `Q` | powrót do książki / do menu gier |
 | `M` | wycisz dźwięk i mowę |
 
-**Moja potrawa** (ostatnia karta w książce): wybierasz, co gotujesz (zupę, pizzę, naleśniki, sałatkę albo sok), a potem bierzesz ze spiżarni, co tylko chcesz, i stukasz **Gotowe**. Ale uwaga: jak smaki do siebie nie pasują, przyjaciele się krzywią i mówią „bleee!”. Dziwne jest na przykład:
+**Moja potrawa** (ostatnia karta w książce): wybierasz, co gotujesz (zupę, pizzę, naleśniki, sałatkę, spaghetti, sok albo lody), a potem bierzesz ze spiżarni, co tylko chcesz, i stukasz **Gotowe**. Spiżarnia ma zakładki: 🥕 warzywa, 🍎 owoce, 🧀 inne (ser, kiełbasa, klopsiki, makaron, krem…) i 🧦 śmieszne rzeczy (skarpetka, but, szalik, kartka papieru, kredka, miś, piłka). Ale uwaga: jak smaki do siebie nie pasują, przyjaciele się krzywią i mówią „bleee!”. Dziwne jest na przykład:
   - owoce w zupie albo na pizzy („Banan na pizzy? Dziwne!”),
   - słone rzeczy w soku (ale sok marchewkowy i pomidorowy jest OK),
   - słodkie razem ze słonym („Truskawka i salami? Dziwne połączenie!”),
-  - lód gdzie indziej niż w soku.
+  - lód gdzie indziej niż w soku i lodach,
+  - i oczywiście śmieszne rzeczy: wtedy przyjaciele mówią w dymkach na przykład „Fuuu! To smakuje jak stara skarpeta!”. Co mówią o każdej rzeczy, jest w `kuchnia/przepisy.js` (pole `fuj`).
 
 - Jak wrzucisz do garnka coś, czego się nie je (np. but albo skarpetkę), to odbije się z powrotem.
 - Każde ugotowanie dodaje gwiazdkę w książce kucharskiej.
+- Każdy przyjaciel ma ulubione jedzenie (lista `ulubione` w `kuchnia/przepisy.js`). Jak jest w potrawie, przyjaciel pokazuje je w chmurce, a po jedzeniu skacze z radości i mówi „Moje ulubione!”.
+- Przyjaciół można głaskać: przesuń palcem po głowie. Kotek mruczy, a reszta chichocze.
+- Kiedy coś ładnie pachnie, ktoś z przyjaciół zagląda przez okno do kuchni. Stuknij w niego!
 - Mowa działa, kiedy w telefonie albo komputerze jest polski głos (iPhone i Windows go mają).
 
 Na telefonie we wszystkich grach steruje się palcem.
@@ -155,6 +163,6 @@ kuchnia/rysowanie.js ← garnki, zwierzaki i kuchnia
 
 W grze „Na ratunek!” możesz sam narysować etap: otwórz `ratunek/poziomy.js`, zmień literki na mapie (na górze pliku jest legenda: `#` ziemia, `o` moneta, `g` glutek…) i odśwież stronę.
 
-W „Kuchni Helenki” możesz też zmienić, co pasuje do czego: w `kuchnia/przepisy.js` lista `SMAKI` mówi, co jest słodkie, a co słone, a `SPIZARNIA` – co stoi w spiżarni.
+W „Kuchni Helenki” możesz też zmienić, co pasuje do czego: w `kuchnia/przepisy.js` lista `SMAKI` mówi, co jest słodkie, a co słone, a `ZAKLADKI_SPIZARNI` – co stoi w spiżarni.
 
 W „Kuchni Helenki” możesz dopisać własny przepis: otwórz `kuchnia/przepisy.js`, skopiuj jeden przepis z listy `PRZEPISY` i zmień kroki (na górze pliku jest opis każdego rodzaju kroku).
