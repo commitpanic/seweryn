@@ -140,6 +140,39 @@ Przepisy:
 - Kiedy coś ładnie pachnie, ktoś z przyjaciół zagląda przez okno do kuchni. Stuknij w niego!
 - Mowa działa, kiedy w telefonie albo komputerze jest polski głos (iPhone i Windows go mają).
 
+## 🦷 Dentystka Helenka
+
+Druga gra dla Helenki. W poczekalni siedzą zwierzątka i bolą je ząbki: panda, jeżyk, małpka, kotek, piesek i króliczek. Stuknij w jedno, a usiądzie na fotelu dentystycznym. Nie ma pośpiechu i nie da się przegrać. Gra mówi, co trzeba zrobić, a jak długo nic się nie dzieje, rączka pokazuje, gdzie stuknąć.
+
+Narzędzia leżą na tacy i trzeba ich używać **po kolei**. Na górze ekranu pasek z obrazkami pokazuje, które narzędzie teraz, a które później:
+
+| Krok | Narzędzie | Co robisz |
+|---|---|---|
+| 1 | – | stukasz w buzię, a pacjent mówi „aaa” i ją otwiera |
+| 2 | 🪞 lusterko | oglądasz każdy ząbek (lusterko powiększa!) i znajdujesz dziurki |
+| 3 | 🪥 szczoteczka | szorujesz ząbki, aż będą białe; resztki jedzenia odpadają |
+| 4 | 💧 woda | spłukujesz pianę |
+| 5 | ssak | wysysasz wodę z buzi |
+| 6 | wiertło | czyścisz czarną dziurkę (bzzz!) |
+| 7 | plomba | zalepiasz dziurkę kolorową plombą |
+| 8 | lampka | świecisz niebieskim światłem, żeby plomba stwardniała |
+| 9 | kleszcze | łapiesz ruszający się ząbek i ciągniesz, aż wyskoczy do pudełeczka |
+| 10 | ⭐ naklejka | dzielny pacjent wybiera naklejkę |
+
+- Kroki 6–8 są tylko wtedy, gdy pacjent ma dziurkę, a krok 9 tylko wtedy, gdy ząbek się rusza. Każda wizyta jest trochę inna.
+- Jak weźmiesz złe narzędzie, to ono drży, a dobre podskakuje.
+- Myszką wystarczy jeździć narzędziem po ząbkach. Palcem trzymasz narzędzie i przesuwasz.
+- Jak wszyscy będą mieć zdrowe ząbki, stuknij **Nowy dzień**, a zwierzątka przyjdą jeszcze raz.
+- W poczekalni zwierzątka można głaskać.
+
+| Klawisze | Co robią |
+|---|---|
+| `1` – `6` | w poczekalni: wybór pacjenta |
+| `1` – `8` | na fotelu: narzędzie z tacy (po kolei od lewej) |
+| `Spacja` | „aaa” / następny pacjent |
+| `Esc` / `Q` | powrót do poczekalni / do menu gier |
+| `M` | wycisz dźwięk i mowę |
+
 Na telefonie we wszystkich grach steruje się palcem.
 
 ## Jak zmieniać gry
@@ -159,6 +192,9 @@ ratunek/rysowanie.js ← kolory krain i rysowanie
 kuchnia/gra.js       ← Kuchnia Helenki (ustawienia i zasady)
 kuchnia/przepisy.js  ← przepisy, składniki i przyjaciele
 kuchnia/rysowanie.js ← garnki, zwierzaki i kuchnia
+dentystka/gra.js       ← Dentystka Helenka (ustawienia i zasady)
+dentystka/dane.js      ← pacjenci, narzędzia, naklejki i co mówi gra
+dentystka/rysowanie.js ← zwierzaki, ząbki, narzędzia i gabinet
 ```
 
 W grze „Na ratunek!” możesz sam narysować etap: otwórz `ratunek/poziomy.js`, zmień literki na mapie (na górze pliku jest legenda: `#` ziemia, `o` moneta, `g` glutek…) i odśwież stronę.
