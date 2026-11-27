@@ -8,7 +8,11 @@
 //  Jak rzucać:
 //   - Myszka albo palec: złap lotkę i pociągnij w górę. Na tarczy pojawi się celownik.
 //     Im wyżej pociągniesz, tym wyżej jest celownik. W bok – ruszasz palcem w bok.
-//     Puść, a lotka poleci tam, gdzie jest celownik. Uwaga: celownik trochę się buja!
+//   - Wokół celownika jest KÓŁKO. Lotka wpadnie gdzieś w to kółko.
+//     Trzymaj palec spokojnie, a kółko się zmniejszy (skupiasz się!).
+//     Ruszasz palcem – kółko rośnie. Trzymasz za długo – ręka się męczy i kółko też rośnie.
+//     Puść, kiedy kółko jest małe i zielone!
+//     (W USTAWIENIACH możesz wrócić do starego sposobu: sposobCelowania: 'celownik'.)
 //   - Klawiatura: ← → przesuwa rękę, trzymaj SPACJĘ i puść.
 //     Żółte kółko jeździ po tarczy w górę i w dół – puść, kiedy jest tam, gdzie chcesz.
 //
@@ -28,16 +32,27 @@
 //   - Kto pierwszy zejdzie do zera, wygrywa.
 //   - Kiedy zostanie mało, gra podpowiada, jak skończyć (np. 3×20, 3×20, środek).
 //
+//  DOOKOŁA TARCZY: traf po kolei w 1, 2, 3... aż do 20, a na koniec w środek.
+//   Podwójne przeskakuje o 2 liczby, a potrójne o 3! Kto pierwszy obejdzie tarczę, wygrywa.
+//
 //  Można grać samemu albo we dwóch na zmianę.
 
 
 // ---------- USTAWIENIA (śmiało je zmieniaj!) ----------
 const USTAWIENIA = {
   gry: [501, 301],              // od ilu punktów można zacząć (możesz dopisać np. 101 albo 701)
+  dookolaTarczy: true,          // czy na starcie jest też gra DOOKOŁA TARCZY
   koncowkaNaPodwojnym: true,    // true = trzeba skończyć na podwójnym (prawdziwe zasady), false = wystarczy zero
+  podwojneSkacza: true,         // DOOKOŁA TARCZY: podwójne przeskakuje o 2 liczby, potrójne o 3
   lotekWKolejce: 3,             // ile lotek rzuca gracz, zanim przyjdzie kolej na następnego
   grubePierscienie: 1.3,        // jak grube są pola podwójne i potrójne (1 = jak na prawdziwej tarczy, więcej = łatwiej)
   duzySrodek: 1.2,              // jak duży jest środek tarczy (1 = jak na prawdziwej tarczy, więcej = łatwiej)
+  sposobCelowania: 'kolko',     // 'kolko' = lotka wpada gdzieś w kółko, które maleje, gdy trzymasz spokojnie (trudniej)
+                                // 'celownik' = lotka leci dokładnie w celownik (łatwiej, tak było na początku)
+  kolkoNaPoczatku: 0.35,        // jak duże jest kółko, kiedy złapiesz lotkę (1 = cała tarcza)
+  kolkoNajmniejsze: 0.05,       // jak małe może się zrobić kółko, kiedy trzymasz spokojnie
+  czasSkupienia: 1.2,           // ile sekund trzeba trzymać spokojnie, żeby kółko było najmniejsze
+  zmeczenieReki: 3,             // po ilu sekundach trzymania ręka się męczy i kółko znowu rośnie
   bujanieCelownika: 0.05,       // jak bardzo celownik się buja, jak trzęsąca się ręka (0 = stoi w miejscu, łatwo!)
   czuloscCelownika: 2,          // o ile pikseli celownik idzie w górę, gdy pociągniesz palcem o 1 piksel
   linkaCelowania: true,         // kreska pokazuje, nad którym miejscem tarczy jest twoja ręka
@@ -74,7 +89,7 @@ const ZIARENKA_KORKA = 0.35;   // ile ziarenek korka jest na tarczy (0 = gładka
 const KOLOR_GRY = '#a3e635';
 const KOLOR_KREDY = 'rgba(242, 240, 228, 0.92)';
 const KOLORY_KONFETTI = ['#ffd23f', '#ff5a5f', '#4cc9f0', '#3ddc97', '#c77dff', '#ff9f1c', '#a3e635'];
-const TRYBY = USTAWIENIA.gry.map(String);   // np. ['501', '301']
+const TRYBY = [...USTAWIENIA.gry.map(String), ...(USTAWIENIA.dookolaTarczy ? ['dookola'] : [])];   // np. ['501', '301', 'dookola']
 const SMUGI = [[0.28, 0.3, 0.22, 0.07], [0.7, 0.55, 0.26, 0.09], [0.45, 0.82, 0.3, 0.06]];   // smugi po kredzie na tablicy
 
 
@@ -165,6 +180,7 @@ let czas = 0;
 let koniecOd = 0;
 let wyciszone = false;
 let przyciski = [];            // przyciski w okienkach: { x, y, w, h, akcja }
+let okienko = null;            // gdzie jest okienko na środku: { x, y, w, h }
 const dotyk = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 const L = {};                  // rozmiary ekranu
 
@@ -204,6 +220,24 @@ function hexAlfa(hex, a) {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex;
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
+// Czy trwa gra DOOKOŁA TARCZY (a nie 501 albo 301)?
+function dookola() {
+  return trybGry === 'dookola';
+}
+
+function nazwaTrybu(t) {
+  return t === 'dookola' ? 'Dookoła tarczy' : t;
+}
+
+// Dookoła tarczy: cel 1–20 to liczby, 21 to środek, 22 = cała tarcza obejdzona
+function liczbaCelu(cel) {
+  return cel <= 20 ? cel : 25;
+}
+
+function nazwaCelu(cel) {
+  return cel <= 20 ? String(cel) : 'środek';
 }
 
 
@@ -384,6 +418,12 @@ function dzwiekPotrojnego() {
   [784, 988, 1319].forEach((f, i) => pisk(f, 0.12, 'square', 0.06, 0.05 + i * 0.07));
 }
 
+function dzwiekCelu(skok) {
+  pisk(880, 0.1, 'triangle', 0.12);
+  pisk(1320, 0.14, 'triangle', 0.1, 0.08);
+  if (skok > 1) pisk(1760, 0.16, 'triangle', 0.08, 0.16);
+}
+
 function dzwiekSrodka() {
   [523, 659, 784, 1047, 1319].forEach((f, i) => pisk(f, 0.14, 'square', 0.07, 0.05 + i * 0.07));
   szum(0.8, 'bandpass', 1100, 0.06, 0.15, 0.15);
@@ -540,13 +580,20 @@ function zamkniecie(z, ile) {
 
 // Podpowiedź dla gracza, który teraz rzuca
 function podpowiedzZamkniecia() {
-  if (!USTAWIENIA.podpowiedzi || stan !== 'gra' || !gracze.length) return null;
+  if (!USTAWIENIA.podpowiedzi || stan !== 'gra' || !gracze.length || dookola()) return null;
   if (faza === 'koniecKolejki' || faza === 'zbieranie') return null;
   return zamkniecie(gracze[ktory].wynik, USTAWIENIA.lotekWKolejce - tura.length);
 }
 
-// Które pole świeci na tarczy: pierwsza lotka z podpowiedzi
+// Które pole świeci na tarczy: pierwsza lotka z podpowiedzi albo (dookoła tarczy) liczba, w którą teraz celujesz
 function celPodpowiedzi() {
+  if (dookola()) {
+    if (!USTAWIENIA.podpowiedzi || stan !== 'gra' || !gracze.length) return null;
+    if (faza === 'koniecKolejki' || faza === 'zbieranie') return null;
+    const cel = gracze[ktory].cel;
+    if (cel > 21) return null;
+    return { liczba: liczbaCelu(cel), mnoznik: 0 };   // mnoznik 0 = całe pole się liczy
+  }
   const z = podpowiedzZamkniecia();
   return z ? z[0] : null;
 }
@@ -557,12 +604,13 @@ function celPodpowiedzi() {
 // =====================================================
 function nowyGracz(i) {
   const u = USTAWIENIA.gracze[i] || {};
-  const start = Number(trybGry);
+  const start = dookola() ? 0 : Number(trybGry);
   return {
     imie: u.imie || `Gracz ${i + 1}`,
     kolor: u.kolor || KOLORY_KONFETTI[i % KOLORY_KONFETTI.length],
-    wynik: start,                // ile jeszcze zostało do zera
+    wynik: start,                // 501 i 301: ile jeszcze zostało do zera
     wynikPrzedKolejka: start,
+    cel: 1,                      // dookoła tarczy: w co teraz celujesz (21 = środek, 22 = koniec)
     lotki: 0,                    // ile lotek już rzucił
     historia: [],                // po każdej kolejce: { suma, po, zaDuzo }
     najlepszaKolejka: 0,
@@ -608,8 +656,9 @@ function rozpocznijKolejke() {
   const g = gracze[ktory];
   g.wynikPrzedKolejka = g.wynik;
   ustawFaze('zmiana', 1.0);
-  if (gracze.length > 1) pokazBaner(`Rzuca ${g.imie}`, g.kolor, `Zostało ${g.wynik}`, 1.1);
-  else pokazBaner(`Runda ${runda}`, '#ffd23f', `Zostało ${g.wynik}`, 1.0);
+  const pod = dookola() ? `Celuj w ${nazwaCelu(g.cel)}` : `Zostało ${g.wynik}`;
+  if (gracze.length > 1) pokazBaner(`Rzuca ${g.imie}`, g.kolor, pod, 1.1);
+  else pokazBaner(`Runda ${runda}`, '#ffd23f', pod, 1.0);
   dzwiekKolejki();
 }
 
@@ -634,10 +683,37 @@ function pociagniecie() {
 
 // Gdzie jest celownik, kiedy trzymasz lotkę palcem albo myszką:
 // w poziomie nad palcem, a im wyżej pociągniesz, tym wyżej na tarczy
+// r to promień kółka: lotka wpadnie gdzieś w to kółko
 function celownikPalca() {
   const b = bujanie();
   const y = L.ty + L.Rz + 10 - pociagniecie() * USTAWIENIA.czuloscCelownika;
-  return { x: trzymanie.x + b.x, y: Math.max(L.hudH + 6, y) + b.y };
+  return { x: trzymanie.x + b.x, y: Math.max(L.hudH + 6, y) + b.y, r: promienKolka() };
+}
+
+// Sposób „kółko”: im bardziej skupiony, tym mniejsze kółko. Zmęczona ręka – kółko rośnie.
+function promienKolka() {
+  if (USTAWIENIA.sposobCelowania !== 'kolko' || !trzymanie) return 0;
+  const rMax = USTAWIENIA.kolkoNaPoczatku * L.R;
+  const rMin = USTAWIENIA.kolkoNajmniejsze * L.R;
+  const zmeczenie = Math.max(0, trzymanie.czasTrzymania - USTAWIENIA.zmeczenieReki);
+  return Math.min(rMax * 1.3, rMin + (rMax - rMin) * (1 - trzymanie.skupienie) + zmeczenie * rMax * 0.45);
+}
+
+function zmeczonaReka() {
+  return !!trzymanie && USTAWIENIA.sposobCelowania === 'kolko' && trzymanie.czasTrzymania > USTAWIENIA.zmeczenieReki;
+}
+
+// Co klatkę: spokojny palec = większe skupienie, ruszający się palec = mniejsze
+function aktualizujKolko(dt) {
+  const t = trzymanie;
+  if (!t || dt <= 0) return;
+  t.czasTrzymania += dt;
+  const predkosc = Math.hypot(t.x - t.px, t.y - t.py) / dt;   // piksele na sekundę
+  t.px = t.x;
+  t.py = t.y;
+  t.skupienie += dt / USTAWIENIA.czasSkupienia;
+  if (predkosc > 60) t.skupienie -= (predkosc * dt) / 200;
+  t.skupienie = ogranicz(t.skupienie, 0, 1);
 }
 
 // Lotka wylatuje z ręki (x0, y0) i leci do (x1, y1) – wszystko w pikselach na ekranie
@@ -713,7 +789,13 @@ function wbij() {
   if (w.liczba === 25) g.srodki++;
   const ny = y - L.fs * 1.3;   // tu pokazujemy napis z punktami
 
-  // Odejmujemy. Ale uwaga na „za dużo”!
+  if (dookola()) {
+    liczDookola(g, w, x, y, ny);
+    if (wygral >= 0 || tura.length >= USTAWIENIA.lotekWKolejce) zakonczKolejke();
+    return;
+  }
+
+  // 501 i 301: odejmujemy. Ale uwaga na „za dużo”!
   const zostanie = g.wynik - w.punkty;
   const podw = USTAWIENIA.koncowkaNaPodwojnym;
   let powod = '';
@@ -742,6 +824,22 @@ function wbij() {
   }
 
   if (wygral >= 0 || spalona || tura.length >= USTAWIENIA.lotekWKolejce) zakonczKolejke();
+}
+
+// Dookoła tarczy: trafiłeś w liczbę, w którą trzeba? To idziesz dalej.
+function liczDookola(g, w, x, y, ny) {
+  const cel = liczbaCelu(g.cel);
+  if (w.liczba > 0 && w.liczba === cel) {
+    w.trafionyCel = true;
+    const skok = USTAWIENIA.podwojneSkacza && cel !== 25 ? w.mnoznik : 1;
+    g.cel = g.cel >= 21 ? 22 : Math.min(21, g.cel + skok);
+    if (g.cel === 22) wygral = ktory;
+    napis(skok > 1 ? `${w.krotko}! Skok o ${skok}!` : `${cel === 25 ? 'Środek' : cel} ✓`, x, ny, '#3ddc97', true);
+    dzwiekCelu(skok);
+    if (skok > 1 || cel === 25) konfetti(x, y, 24);
+  } else if (!w.pudlo) {
+    napis(w.obok ? 'Obok' : (w.liczba === 25 ? 'Środek' : String(w.liczba)), x, ny, 'rgba(255, 255, 255, 0.75)');
+  }
 }
 
 function pokazTrafienie(w, x, y) {
@@ -789,7 +887,7 @@ function zakonczKolejke() {
 
   if (wygral >= 0) {
     ustawFaze('koniecKolejki', 2.6);
-    const tytul = gracze.length > 1 ? `Wygrywa ${g.imie}!` : 'Zero! Udało się!';
+    const tytul = gracze.length > 1 ? `Wygrywa ${g.imie}!` : dookola() ? 'Cała tarcza!' : 'Zero! Udało się!';
     pokazBaner(tytul, gracze.length > 1 ? g.kolor : '#ffd23f', `${g.lotki} ${slowoLotek(g.lotki)}`, 2.6, true, nizej);
     for (let i = -1; i <= 1; i++) konfetti(L.tx + i * L.R * 0.7, L.ty - L.R * 0.3, 40, 1.3);
     dzwiekWygranej();
@@ -799,6 +897,8 @@ function zakonczKolejke() {
     pokazBaner(powodSpalenia, '#ff5a5f', `Wracasz do ${g.wynik}`, 2.2, false, nizej);
     dzwiekZaDuzo();
     powiedz(powodSpalenia);
+  } else if (dookola()) {
+    powiedz(`Teraz ${nazwaCelu(g.cel)}`);
   } else if (suma === 180) {
     ustawFaze('koniecKolejki', 2.8);
     pokazBaner('180!', '#ffd23f', 'Najwięcej, ile się da!', 2.8, true, nizej);
@@ -835,7 +935,7 @@ function koniecGry() {
   trzymanie = null;
   ladowanie = null;
   nowyRekord = null;
-  // Wygrywa ten, kto zszedł do zera. Rekord: jak najmniej lotek.
+  // Wygrywa ten, kto pierwszy skończył. Rekord: jak najmniej lotek.
   zwyciezca = gracze[wygral];
   const n = zwyciezca.lotki;
   if (!rekordy[trybGry] || n < rekordy[trybGry]) {
@@ -851,6 +951,7 @@ function aktualizujGre(dt) {
   if (klawisze.prawo) reka.dx += 0.9 * dt;
   reka.dx = ogranicz(reka.dx, -1.45, 1.45);
   if (ladowanie) ladowanie.t += dt;
+  aktualizujKolko(dt);
 
   if (przeladowanie > 0) przeladowanie = Math.max(0, przeladowanie - dt);
   if (lotkaGotowa()) wReku += dt;
@@ -959,6 +1060,11 @@ function aktualizujSpadajace(dt) {
 // =====================================================
 //   STEROWANIE
 // =====================================================
+// Czy (x, y) jest w okienku (pauza, start, koniec)?
+function wOkienku(x, y) {
+  return !!okienko && x >= okienko.x && x <= okienko.x + okienko.w && y >= okienko.y && y <= okienko.y + okienko.h;
+}
+
 function przyciskPod(x, y) {
   for (const p of przyciski) {
     if (x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h) return p.akcja;
@@ -1007,8 +1113,7 @@ function wykonaj(akcja) {
   else if (akcja === 'graj') nowaGra();
   else if (akcja === 'znowu') {
     if (czas - koniecOd > 0.8) nowaGra();   // chwila przerwy, żeby nie zacząć przez przypadek
-  } else if (akcja === 'zmien') doStartu();
-  else if (akcja === 'dalej') stan = 'gra';
+  } else if (akcja === 'dalej') stan = 'gra';
 }
 
 function pauza() {
@@ -1051,29 +1156,49 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
-  if (stan === 'start') {
-    if (kod === 'ArrowLeft' || kod === 'KeyA') zmienTryb(-1);
-    else if (kod === 'ArrowRight' || kod === 'KeyD') zmienTryb(1);
-    else if (kod === 'Digit1' || kod === 'Numpad1') wybierzGraczy(1);
-    else if (kod === 'Digit2' || kod === 'Numpad2') wybierzGraczy(2);
-    else if (kod === 'ArrowUp' || kod === 'ArrowDown' || kod === 'KeyW' || kod === 'KeyS') {
+  // Na starcie, w pauzie i na końcu: ← → wybiera grę, 1 i 2 – ilu graczy
+  if (stan !== 'gra') {
+    if (kod === 'ArrowLeft' || kod === 'KeyA') {
+      zmienTryb(-1);
+      return;
+    }
+    if (kod === 'ArrowRight' || kod === 'KeyD') {
+      zmienTryb(1);
+      return;
+    }
+    if (kod === 'Digit1' || kod === 'Numpad1') {
+      wybierzGraczy(1);
+      return;
+    }
+    if (kod === 'Digit2' || kod === 'Numpad2') {
+      wybierzGraczy(2);
+      return;
+    }
+    if (kod === 'ArrowUp' || kod === 'ArrowDown' || kod === 'KeyW' || kod === 'KeyS') {
       e.preventDefault();
       wybierzGraczy(ileGraczy === 1 ? 2 : 1);
-    } else if (spacja && !e.repeat) nowaGra();
-    else if (kod === 'KeyQ') idzDoMenu();
+      return;
+    }
+    if (kod === 'KeyQ') {
+      idzDoMenu();
+      return;
+    }
+  }
+
+  if (stan === 'start') {
+    if (spacja && !e.repeat) nowaGra();
     return;
   }
 
   if (stan === 'koniec') {
     if (spacja && !e.repeat && czas - koniecOd > 1) nowaGra();
     else if (kod === 'Escape') doStartu();
-    else if (kod === 'KeyQ') idzDoMenu();
     return;
   }
 
   if (stan === 'pauza') {
     if ((spacja && !e.repeat) || kod === 'Escape' || kod === 'KeyP') stan = 'gra';
-    else if (kod === 'KeyQ') idzDoMenu();
+    else if (kod === 'KeyN') nowaGra();
     return;
   }
 
@@ -1126,7 +1251,7 @@ plotno.addEventListener('pointerdown', (e) => {
   if (stan !== 'gra') {
     const akcja = przyciskPod(x, y);
     if (akcja) wykonaj(akcja);
-    else if (stan === 'pauza') stan = 'gra';
+    else if (stan === 'pauza' && !wOkienku(x, y)) stan = 'gra';   // stuknięcie obok okienka = graj dalej
     return;
   }
   if (y < L.hudH) {      // stuknięcie w górny pasek = pauza
@@ -1142,7 +1267,10 @@ plotno.addEventListener('pointerdown', (e) => {
     faza = 'celuj';
     if (baner) baner.t = Math.max(baner.t, baner.dlugosc - 0.2);
   }
-  trzymanie = { id: e.pointerId, x, y, startX: x, startY: y, vx: 0, t: e.timeStamp };
+  trzymanie = {
+    id: e.pointerId, x, y, startX: x, startY: y, vx: 0, t: e.timeStamp,
+    px: x, py: y, skupienie: 0, czasTrzymania: 0,   // do kółka
+  };
   ostatnioKlawiatura = false;
   try {
     plotno.setPointerCapture(e.pointerId);
@@ -1176,7 +1304,10 @@ function puscLotke(e, anuluj) {
     napis('Pociągnij lotkę w górę!', czubekX, czubekY - L.fs, '#ffd23f');
     return;
   }
-  wypuscLotke(czubekX, czubekY, cel.x, cel.y);
+  // Lotka wpada w losowe miejsce w kółku (przy sposobie „celownik” kółko ma 0, więc leci dokładnie w celownik)
+  const kat = Math.random() * Math.PI * 2;
+  const odl = cel.r * Math.sqrt(Math.random());
+  wypuscLotke(czubekX, czubekY, cel.x + Math.cos(kat) * odl, cel.y + Math.sin(kat) * odl);
 }
 
 plotno.addEventListener('pointerup', (e) => puscLotke(e, false));
@@ -1703,6 +1834,32 @@ function rysujCelownik(x, y) {
   ctx.restore();
 }
 
+// Kółko wokół celownika: czerwone = duże (lotka poleci byle gdzie), zielone = małe (celnie!)
+function rysujKolko(c) {
+  const rMax = USTAWIENIA.kolkoNaPoczatku * L.R;
+  const rMin = USTAWIENIA.kolkoNajmniejsze * L.R;
+  const q = ogranicz((c.r - rMin) / Math.max(1, rMax - rMin), 0, 1);
+  const kolor = q < 0.2 ? '61, 220, 151' : q < 0.55 ? '255, 210, 63' : '255, 90, 95';
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${kolor}, 0.16)`;
+  ctx.fill();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.stroke();
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = `rgba(${kolor}, 0.95)`;
+  ctx.stroke();
+  ctx.restore();
+  if (zmeczonaReka()) {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    dopasujCzcionke('Ręka się męczy!', L.fs * 1.05, true, L.W - 20);
+    tekstZObwodka('Ręka się męczy!', ogranicz(c.x, 90, L.W - 90), c.y - c.r - L.fs, '#ff8fa3', 4);
+  }
+}
+
 // Kreska nad ręką i celownik
 function rysujLinke() {
   if (stan !== 'gra') return;
@@ -1720,6 +1877,7 @@ function rysujLinke() {
   }
   if (trzymanie) {
     const c = celownikPalca();
+    if (c.r > 0) rysujKolko(c);
     rysujCelownik(c.x, c.y);
   } else if (ladowanie) {
     const b = bujanie();
@@ -1830,6 +1988,7 @@ function rysujPodpowiedz() {
   }
   ctx.restore();
   let tekst = dotyk ? 'Złap lotkę palcem i pociągnij w górę!' : 'Złap lotkę myszką i pociągnij w górę!';
+  if (USTAWIENIA.sposobCelowania === 'kolko') tekst = 'Złap lotkę, pociągnij w górę i trzymaj spokojnie!';
   if (ostatnioKlawiatura) tekst = 'Trzymaj SPACJĘ i puść!';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -1843,6 +2002,7 @@ function opisLotki(w) {
   if (w.obok) return ['Obok', '0', '#ff8fa3'];
   const nazwa = w.liczba === 25 ? 'Środek' : w.krotko;
   if (w.zaDuzo) return [nazwa, 'za dużo', '#ff5a5f'];
+  if (dookola()) return [nazwa, w.trafionyCel ? '✓' : '–', w.trafionyCel ? '#3ddc97' : '#cfc8ff'];
   let kolor = '#ffffff';
   if (w.punkty === 50) kolor = '#ffd23f';
   else if (w.liczba === 25) kolor = '#3ddc97';
@@ -1915,13 +2075,21 @@ function rysujDol() {
     maly3 = zamk.map(nazwaRzutu).join(', ');
     kolor2 = '#ffd23f';
   }
+  let maly1 = 'Zostało';
+  let duzy = String(g.wynik);
+  if (dookola()) {
+    maly1 = g.cel > 21 ? 'Brawo!' : 'Teraz celuj w';
+    duzy = g.cel > 21 ? '✓' : nazwaCelu(g.cel);
+    maly2 = `Zaliczone: ${Math.min(21, g.cel - 1)} z 21`;
+    maly3 = '';
+    kolor2 = '#cfc8ff';
+  }
   const y = L.rekaY;
   const k = maly3 ? [-2.05, -0.45, 1.15, 2.35] : [-1.55, 0, 1.55];
   ctx.textAlign = 'left';
-  dopasujCzcionke('Zostało', fs * 0.85, false, pw);
+  dopasujCzcionke(maly1, fs * 0.85, false, pw);
   ctx.fillStyle = '#a9a3d9';
-  ctx.fillText('Zostało', px, y + fs * k[0]);
-  const duzy = String(g.wynik);
+  ctx.fillText(maly1, px, y + fs * k[0]);
   dopasujCzcionke(duzy, fs * 2.0 * (1 + 0.35 * skok), true, pw);
   tekstZObwodka(duzy, px, y + fs * k[1], '#ffd23f', 4);
   if (maly2) {
@@ -2061,7 +2229,7 @@ function rysujTablice() {
   }
 
   ctx.font = kreda(fk * 1.1, true);
-  ctx.fillText(trybGry, srodekX, T.y + fk * 1.3);
+  ctx.fillText(nazwaTrybu(trybGry), srodekX, T.y + fk * 1.3);
   kredowaLinia(T.x + T.w * 0.12, T.y + fk * 2.4, T.x + T.w * 0.88, T.y + fk * 2.4);
   const kol = gracze.length;
   const cw = T.w / kol;
@@ -2075,6 +2243,10 @@ function rysujTablice() {
     if (kol > 1 && j === ktory && stan === 'gra') kredowaLinia(cx - cw * 0.3, gora + fk * 0.75, cx + cw * 0.3, gora + fk * 0.75, g.kolor);
     ctx.fillStyle = KOLOR_KREDY;
 
+    if (dookola()) {
+      rysujSiatkeDookola(g, cx, gora + fk * 1.6, cw, fk);
+      continue;
+    }
     // Jak na prawdziwej tablicy: po każdej kolejce skreślamy stary wynik i piszemy, ile zostało
     const wartosci = [Number(trybGry), ...g.historia.map((h) => h.po)];
     const wiersze = wartosci.map((v, i) => ({
@@ -2105,7 +2277,32 @@ function rysujTablice() {
 // =====================================================
 //   RYSOWANIE – górny pasek
 // =====================================================
+// Dookoła tarczy: liczby od 1 do 20 i środek – zaliczone są skreślone
+function rysujSiatkeDookola(g, cx, gora, cw, fk) {
+  const kolumny = 3;
+  const kw = Math.min((cw * 0.85) / kolumny, fk * 2.3);
+  const kh = fk * 1.3;
+  for (let k = 1; k <= 21; k++) {
+    const i = k - 1;
+    const x = cx + ((i % kolumny) - (kolumny - 1) / 2) * kw;
+    const y = gora + Math.floor(i / kolumny) * kh;
+    const tekst = k <= 20 ? String(k) : 'Ś';
+    const zaliczony = k < g.cel;
+    const teraz = k === g.cel;
+    ctx.globalAlpha = zaliczony ? 0.4 : 1;
+    ctx.font = kreda(fk * (teraz ? 1.1 : 0.9), teraz);
+    ctx.fillStyle = teraz ? '#ffd23f' : KOLOR_KREDY;
+    ctx.fillText(tekst, x, y);
+    if (zaliczony) {
+      const sz = ctx.measureText(tekst).width;
+      kredowaLinia(x - sz / 2 - 3, y + 3, x + sz / 2 + 3, y - 3);
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
 function tekstWyniku(g, dlugi) {
+  if (dookola()) return g.cel > 21 ? '✓ Koniec' : `Cel: ${nazwaCelu(g.cel)}`;
   return dlugi ? `Zostało: ${g.wynik}` : String(g.wynik);
 }
 
@@ -2137,7 +2334,7 @@ function rysujPasek() {
   }
 
   const opisRundy = `Runda ${runda}`;
-  const drugi = trybGry + (USTAWIENIA.koncowkaNaPodwojnym ? ' · koniec na podwójnym' : '') +
+  const drugi = nazwaTrybu(trybGry) + (!dookola() && USTAWIENIA.koncowkaNaPodwojnym ? ' · koniec na podwójnym' : '') +
     (wyciszone ? ' · bez dźwięku (M)' : '');
 
   if (gracze.length === 1) {
@@ -2283,6 +2480,7 @@ function rysujOkienko(elementy, zmniejszone = false) {
   const panelH = wys + 44;
   const x = (L.W - szer) / 2;
   const y = Math.max(L.hudH + 8, L.hudH + (L.H - L.hudH - panelH) / 2);
+  okienko = { x, y, w: szer, h: panelH };   // zapamiętujemy, gdzie jest okienko
   ctx.save();
   ctx.shadowColor = 'rgba(140, 100, 255, 0.45)';
   ctx.shadowBlur = 30 * L.dpr;
@@ -2332,13 +2530,23 @@ function rysujOkienko(elementy, zmniejszone = false) {
 }
 
 function opisTrybu(t) {
+  if (t === 'dookola') return 'Traf po kolei w 1, 2, 3… aż do 20, a na koniec w środek!';
   return `Zaczynasz od ${t} i odejmujesz to, co trafisz. Zejdź dokładnie do zera!`;
 }
 
-function opisKonca() {
+function opisKonca(t) {
+  if (t === 'dookola') {
+    return USTAWIENIA.podwojneSkacza ? 'Podwójne przeskakuje o 2 liczby, a potrójne o 3!' : 'Każda liczba po kolei.';
+  }
   return USTAWIENIA.koncowkaNaPodwojnym
     ? 'Ostatnia lotka musi trafić w podwójne (wąski pierścień na brzegu) albo w sam środek.'
     : 'Możesz skończyć dowolnym polem.';
+}
+
+function opisCelowania() {
+  return USTAWIENIA.sposobCelowania === 'kolko'
+    ? 'Trzymaj spokojnie, aż kółko będzie małe i zielone. Puść!'
+    : 'Puść, a lotka poleci tam, gdzie jest celownik!';
 }
 
 function tekstRekordu(t) {
@@ -2346,29 +2554,43 @@ function tekstRekordu(t) {
   return `Rekord: ${r} ${slowoLotek(r)} (mniej = lepiej)`;
 }
 
+// Wielkość napisów w okienkach – na wąskim telefonie trochę większa, żeby łatwo trafić palcem w przycisk
+function rozmiarOkna() {
+  return ogranicz(Math.min(L.W / 24, L.H / 30), 12, 20);
+}
+
+// Przyciski wyboru gry (501, 301, Dookoła tarczy) i liczby graczy – są na starcie, w pauzie i na końcu
+function przyciskiTrybow(rozmiar) {
+  return { przyciski: TRYBY.map((t) => ({ tekst: nazwaTrybu(t), akcja: 'tryb:' + t, wybrany: tryb === t })), rozmiar };
+}
+
+function przyciskiGraczy(rozmiar) {
+  return {
+    przyciski: [
+      { tekst: '1 gracz', akcja: 'gracze:1', wybrany: ileGraczy === 1 },
+      { tekst: '2 graczy', akcja: 'gracze:2', wybrany: ileGraczy === 2 },
+    ],
+    rozmiar,
+  };
+}
+
 function rysujEkranStartowy() {
-  const fs = L.fs;
+  const fs = rozmiarOkna();
   const r = rekordy[tryb];
   rysujOkienko([
     { tekst: 'Dart', rozmiar: fs * 2.3, gruba: true, kolor: KOLOR_GRY },
     { tekst: 'Złap lotkę i pociągnij w górę – pojawi się celownik.', rozmiar: fs * 1.05, gruba: true, kolor: '#ffd23f' },
-    { tekst: 'Puść, a lotka poleci tam, gdzie jest celownik!', rozmiar: fs * 0.9, kolor: '#cfc8ff' },
+    { tekst: opisCelowania(), rozmiar: fs * 0.9, kolor: '#cfc8ff' },
     { tekst: 'Klawiatura: ← → ręka, trzymaj SPACJĘ i puść', rozmiar: fs * 0.8, kolor: '#a9a3d9' },
     { odstep: fs * 0.7 },
-    { przyciski: TRYBY.map((t) => ({ tekst: t, akcja: 'tryb:' + t, wybrany: tryb === t })), rozmiar: fs * 1.15 },
+    przyciskiTrybow(fs * 1.1),
     { tekst: opisTrybu(tryb), rozmiar: fs * 0.88, kolor: '#cfc8ff' },
-    { tekst: opisKonca(), rozmiar: fs * 0.88, gruba: true, kolor: '#4cc9f0' },
+    { tekst: opisKonca(tryb), rozmiar: fs * 0.88, gruba: true, kolor: '#4cc9f0' },
     r > 0
       ? { tekst: tekstRekordu(tryb), rozmiar: fs * 0.88, gruba: true, kolor: '#3ddc97' }
       : { tekst: 'W tej grze nie masz jeszcze rekordu', rozmiar: fs * 0.82, kolor: '#a9a3d9' },
     { odstep: fs * 0.5 },
-    {
-      przyciski: [
-        { tekst: '1 gracz', akcja: 'gracze:1', wybrany: ileGraczy === 1 },
-        { tekst: '2 graczy', akcja: 'gracze:2', wybrany: ileGraczy === 2 },
-      ],
-      rozmiar: fs,
-    },
+    przyciskiGraczy(fs),
     { tekst: '← → wybiera grę · 1 i 2 – ilu graczy', rozmiar: fs * 0.72, kolor: '#8a83c2' },
     { odstep: fs * 0.5 },
     { przycisk: 'graj', tekst: 'Graj!', rozmiar: fs * 1.3, glowny: true },
@@ -2379,21 +2601,26 @@ function rysujEkranStartowy() {
 }
 
 function rysujPauze() {
-  const fs = L.fs;
+  const fs = rozmiarOkna();
   rysujOkienko([
     { tekst: 'Pauza', rozmiar: fs * 2.1, gruba: true, kolor: '#4cc9f0' },
     { odstep: fs * 0.6 },
     { przycisk: 'dalej', tekst: 'Graj dalej', rozmiar: fs * 1.15, glowny: true },
     { tekst: 'albo naciśnij SPACJĘ', rozmiar: fs * 0.8, kolor: '#ffffff', alfa: migotanie() },
+    { odstep: fs * 0.7 },
+    { tekst: 'Albo zacznij nową grę:', rozmiar: fs * 0.95, gruba: true, kolor: '#ffd23f' },
+    przyciskiTrybow(fs),
+    przyciskiGraczy(fs * 0.9),
+    { przycisk: 'graj', tekst: `Nowa gra: ${nazwaTrybu(tryb)} ▶`, rozmiar: fs * 1.05 },
+    { tekst: '← → wybiera grę · 1 i 2 – ilu graczy · N – nowa gra', rozmiar: fs * 0.72, kolor: '#8a83c2' },
     { odstep: fs * 0.4 },
-    { tekst: 'M – wycisz / włącz dźwięk', rozmiar: fs * 0.85, kolor: '#a9a3d9' },
-    { odstep: fs * 0.4 },
-    { przycisk: 'zmien', tekst: 'Zakończ i wybierz inną grę', rozmiar: fs * 0.9 },
+    { tekst: 'M – wycisz / włącz dźwięk', rozmiar: fs * 0.8, kolor: '#a9a3d9' },
     elementMenu(fs),
   ]);
 }
 
 function wynikKoncowy(g) {
+  if (dookola()) return g.cel > 21 ? `cała tarcza! (${g.lotki} ${slowoLotek(g.lotki)})` : `doszedł do: ${nazwaCelu(g.cel)}`;
   return g.wynik === 0 ? `zero! (${g.lotki} ${slowoLotek(g.lotki)})` : `zostało ${g.wynik}`;
 }
 
@@ -2404,17 +2631,17 @@ function sredniaKolejka(g) {
 }
 
 function rysujKoniec() {
-  const fs = L.fs;
+  const fs = rozmiarOkna();
   const el = [];
   if (gracze.length > 1) {
     el.push({ tekst: `Wygrywa ${zwyciezca.imie}!`, rozmiar: fs * 1.9, gruba: true, kolor: zwyciezca.kolor });
-    el.push({ tekst: `Gra ${trybGry}`, rozmiar: fs * 0.85, kolor: '#a9a3d9' });
+    el.push({ tekst: `Gra: ${nazwaTrybu(trybGry)}`, rozmiar: fs * 0.85, kolor: '#a9a3d9' });
     el.push({ odstep: fs * 0.4 });
     for (const g of gracze) el.push({ tekst: `${g.imie}: ${wynikKoncowy(g)}`, rozmiar: fs * 1.15, gruba: true, kolor: g.kolor });
   } else {
     const g = gracze[0];
-    el.push({ tekst: 'Zero! Udało się!', rozmiar: fs * 1.9, gruba: true, kolor: KOLOR_GRY });
-    el.push({ tekst: `Gra ${trybGry}`, rozmiar: fs * 0.85, kolor: '#a9a3d9' });
+    el.push({ tekst: dookola() ? 'Cała tarcza!' : 'Zero! Udało się!', rozmiar: fs * 1.9, gruba: true, kolor: KOLOR_GRY });
+    el.push({ tekst: `Gra: ${nazwaTrybu(trybGry)}`, rozmiar: fs * 0.85, kolor: '#a9a3d9' });
     el.push({ odstep: fs * 0.4 });
     el.push({ tekst: `Rzuciłeś ${g.lotki} ${slowoLotek(g.lotki)}`, rozmiar: fs * 1.6, gruba: true, kolor: '#ffd23f' });
   }
@@ -2424,7 +2651,12 @@ function rysujKoniec() {
   } else if (rekordy[trybGry] > 0) {
     el.push({ tekst: tekstRekordu(trybGry), rozmiar: fs, kolor: '#a9a3d9' });
   }
-  if (gracze.length === 1) {
+  if (dookola()) {
+    if (gracze.length === 1) {
+      const g = gracze[0];
+      el.push({ tekst: `Potrójne: ${g.potrojne} · W środek: ${g.srodki}`, rozmiar: fs * 0.9, kolor: '#cfc8ff' });
+    }
+  } else if (gracze.length === 1) {
     const g = gracze[0];
     el.push({
       tekst: `Średnia kolejka: ${sredniaKolejka(g)} · Najlepsza: ${g.najlepszaKolejka} · Potrójne: ${g.potrojne} · W środek: ${g.srodki}`,
@@ -2435,16 +2667,19 @@ function rysujKoniec() {
       el.push({ tekst: `${g.imie} – średnia kolejka: ${sredniaKolejka(g)}, najlepsza: ${g.najlepszaKolejka}`, rozmiar: fs * 0.8, kolor: '#cfc8ff' });
     }
   }
-  el.push({ odstep: fs * 0.8 });
+  el.push({ odstep: fs * 0.7 });
+  // Od razu wybierasz, w co gracie dalej
+  el.push({ tekst: 'W co gramy teraz?', rozmiar: fs * 0.95, gruba: true, kolor: '#ffd23f' });
+  el.push(przyciskiTrybow(fs));
+  el.push(przyciskiGraczy(fs * 0.9));
   el.push({
-    przyciski: [
-      { tekst: 'Zagraj znowu', akcja: 'znowu', wybrany: true },
-      { tekst: 'Inna gra', akcja: 'zmien' },
-    ],
-    rozmiar: fs * 1.05,
+    przycisk: 'znowu',
+    tekst: `Graj: ${nazwaTrybu(tryb)} ▶`,
+    rozmiar: fs * 1.2,
+    glowny: true,
     alfa: czas - koniecOd > 0.8 ? 1 : 0.5,
   });
-  el.push({ tekst: 'SPACJA – znowu · Esc – inna gra', rozmiar: fs * 0.75, kolor: '#8a83c2' });
+  el.push({ tekst: 'SPACJA – graj · ← → wybiera grę · 1 i 2 – ilu graczy', rozmiar: fs * 0.72, kolor: '#8a83c2' });
   el.push({ odstep: fs * 0.3 });
   el.push(elementMenu(fs));
   rysujOkienko(el);
@@ -2456,6 +2691,7 @@ function rysujKoniec() {
 // =====================================================
 function rysuj() {
   przyciski = [];   // przyciski istnieją tylko wtedy, gdy narysuje je okienko
+  okienko = null;
   ctx.drawImage(plotnoTla, 0, 0, L.W, L.H);
   rysujTablice();
   const dx = drzenieTarczy * Math.sin(czas * 70) * L.R * 0.008;   // tarcza drży po trafieniu

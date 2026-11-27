@@ -176,15 +176,21 @@ Narzędzia leżą na tacy i trzeba ich używać **po kolei**. Na górze ekranu p
 
 ## 🎯 Dart
 
-Rzucasz lotkami do tarczy z korka. Złap lotkę palcem albo myszką i pociągnij w górę: na tarczy pojawi się żółty celownik. Im wyżej pociągniesz, tym wyżej jest celownik, a w bok ruszasz palcem w bok. Puść, a lotka poleci dokładnie tam, gdzie był celownik. Uwaga: celownik trochę się buja, jak trzęsąca się ręka, więc puść we właściwej chwili!
+Rzucasz lotkami do tarczy z korka. Złap lotkę palcem albo myszką i pociągnij w górę: na tarczy pojawi się żółty celownik. Im wyżej pociągniesz, tym wyżej jest celownik, a w bok ruszasz palcem w bok.
 
-Gra się według prawdziwych zasad darta. Na starcie wybierasz **501** albo **301** i liczbę graczy (1 albo 2 na zmianę):
+Wokół celownika jest **kółko**, a lotka wpada gdzieś w nie. Na początku kółko jest duże i czerwone. Kiedy trzymasz palec spokojnie, maleje i robi się zielone, bo się skupiasz. Jak ruszasz palcem, kółko rośnie. A jak trzymasz za długo, ręka się męczy i kółko znowu rośnie. Puść, kiedy kółko jest małe i zielone!
+
+Łatwiejszy sposób z początku (lotka leci dokładnie w celownik) też jest: w `dart/gra.js` wpisz `sposobCelowania: 'celownik'`. Cała wersja gry sprzed tej zmiany jest zapisana w git pod nazwą `dart-celownik`.
+
+Na starcie wybierasz grę i liczbę graczy (1 albo 2 na zmianę). **501** i **301** to prawdziwe zasady darta:
 
 - Zaczynasz od 501 (albo 301) i odejmujesz wszystko, co trafisz. W swojej kolejce rzucasz 3 lotki.
 - Trzeba zejść dokładnie do zera, a ostatnia lotka musi trafić w **pole podwójne** (wąski pierścień na brzegu) albo w sam środek (50).
 - **Za dużo!** Jeśli zejdziesz poniżej zera, zostanie ci 1 albo dojdziesz do zera nie na podwójnym, cała kolejka się nie liczy i wracasz do tego, co było.
 - Kto pierwszy zejdzie do zera, wygrywa.
 - Kiedy da się już skończyć (od 170 w dół), gra podpowiada jak, np. „Zamknij: 3×20, 3×20, środek”, a pole, w które warto teraz celować, świeci na tarczy.
+
+**Dookoła tarczy**: trafiasz po kolei w 1, 2, 3… aż do 20, a na koniec w środek. Podwójne przeskakuje o 2 liczby, a potrójne o 3. Pole, w które teraz celujesz, świeci, a na tablicy zaliczone liczby są skreślone. Kto pierwszy obejdzie całą tarczę, wygrywa.
 
 | Pole na tarczy | Punkty |
 |---|---|
@@ -196,17 +202,18 @@ Gra się według prawdziwych zasad darta. Na starcie wybierasz **501** albo **30
 
 | Sterowanie | Co robi |
 |---|---|
-| myszka / palec | złap lotkę, pociągnij w górę i puść |
+| myszka / palec | złap lotkę, pociągnij w górę, trzymaj spokojnie i puść |
 | `←` `→` albo `A` `D` | przesuwa rękę |
 | `Spacja` (trzymaj i puść) | celownik jeździ po tarczy w górę i w dół; puść, kiedy jest tam, gdzie chcesz |
-| `←` `→` i `1` `2` na starcie | wybór gry i liczby graczy |
-| `P` / `Esc` | pauza |
+| `←` `→` i `1` `2` | na starcie, w pauzie i na końcu: wybór gry i liczby graczy |
+| `P` / `Esc` albo stuknięcie w górny pasek | pauza; tam możesz też wybrać inną grę i zacząć od nowa (`N`) |
 | `M` | wycisz dźwięk i mowę |
 
-- 501 i 301 mają osobne rekordy: jak najmniej lotek, żeby zejść do zera.
+- Każda gra (501, 301 i Dookoła tarczy) ma osobny rekord: jak najmniej lotek, żeby skończyć.
+- Grę możesz zmienić bez wychodzenia do menu gier: w pauzie albo na końcu gry są przyciski 501 / 301 / Dookoła tarczy i 1 / 2 graczy.
 - Po każdej kolejce sędzia mówi, ile rzuciłeś (jeśli jest polski głos). Trzy razy potrójne 20 to 180, najwięcej, ile się da!
 - Na szerokim ekranie obok tarczy wisi tablica: jak w prawdziwym darcie kredą skreśla się stary wynik i pisze, ile zostało.
-- W `dart/gra.js` w USTAWIENIACH możesz wpisać imiona graczy, zmienić kolory lotek i to, jak bardzo buja się celownik. Możesz też dopisać inną grę (np. 101 albo 701) albo wyłączyć kończenie na podwójnym (`koncowkaNaPodwojnym: false`).
+- W `dart/gra.js` w USTAWIENIACH możesz wpisać imiona graczy i zmienić kolory lotek. Możesz też ustawić, jak duże jest kółko (`kolkoNaPoczatku`, `kolkoNajmniejsze`), jak szybko się zmniejsza (`czasSkupienia`) i kiedy ręka się męczy (`zmeczenieReki`). Da się też dopisać inną grę (np. 101 albo 701) albo wyłączyć kończenie na podwójnym (`koncowkaNaPodwojnym: false`).
 
 Na telefonie we wszystkich grach steruje się palcem.
 
