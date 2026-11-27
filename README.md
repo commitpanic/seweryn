@@ -174,6 +174,40 @@ Narzędzia leżą na tacy i trzeba ich używać **po kolei**. Na górze ekranu p
 | `Esc` / `Q` | powrót do poczekalni / do menu gier |
 | `M` | wycisz dźwięk i mowę |
 
+## 🎯 Dart
+
+Rzucasz lotkami do tarczy z korka. Złap lotkę palcem albo myszką i pociągnij w górę: na tarczy pojawi się żółty celownik. Im wyżej pociągniesz, tym wyżej jest celownik, a w bok ruszasz palcem w bok. Puść, a lotka poleci dokładnie tam, gdzie był celownik. Uwaga: celownik trochę się buja, jak trzęsąca się ręka, więc puść we właściwej chwili!
+
+Gra się według prawdziwych zasad darta. Na starcie wybierasz **501** albo **301** i liczbę graczy (1 albo 2 na zmianę):
+
+- Zaczynasz od 501 (albo 301) i odejmujesz wszystko, co trafisz. W swojej kolejce rzucasz 3 lotki.
+- Trzeba zejść dokładnie do zera, a ostatnia lotka musi trafić w **pole podwójne** (wąski pierścień na brzegu) albo w sam środek (50).
+- **Za dużo!** Jeśli zejdziesz poniżej zera, zostanie ci 1 albo dojdziesz do zera nie na podwójnym, cała kolejka się nie liczy i wracasz do tego, co było.
+- Kto pierwszy zejdzie do zera, wygrywa.
+- Kiedy da się już skończyć (od 170 w dół), gra podpowiada jak, np. „Zamknij: 3×20, 3×20, środek”, a pole, w które warto teraz celować, świeci na tarczy.
+
+| Pole na tarczy | Punkty |
+|---|---|
+| zwykłe pole | tyle, ile pokazuje liczba (od 1 do 20) |
+| wąski pierścień na brzegu | liczba ×2 |
+| wąski pierścień w środku | liczba ×3 |
+| zielone kółko w środku | 25 |
+| czerwona kropka w samym środku | 50 |
+
+| Sterowanie | Co robi |
+|---|---|
+| myszka / palec | złap lotkę, pociągnij w górę i puść |
+| `←` `→` albo `A` `D` | przesuwa rękę |
+| `Spacja` (trzymaj i puść) | celownik jeździ po tarczy w górę i w dół; puść, kiedy jest tam, gdzie chcesz |
+| `←` `→` i `1` `2` na starcie | wybór gry i liczby graczy |
+| `P` / `Esc` | pauza |
+| `M` | wycisz dźwięk i mowę |
+
+- 501 i 301 mają osobne rekordy: jak najmniej lotek, żeby zejść do zera.
+- Po każdej kolejce sędzia mówi, ile rzuciłeś (jeśli jest polski głos). Trzy razy potrójne 20 to 180, najwięcej, ile się da!
+- Na szerokim ekranie obok tarczy wisi tablica: jak w prawdziwym darcie kredą skreśla się stary wynik i pisze, ile zostało.
+- W `dart/gra.js` w USTAWIENIACH możesz wpisać imiona graczy, zmienić kolory lotek i to, jak bardzo buja się celownik. Możesz też dopisać inną grę (np. 101 albo 701) albo wyłączyć kończenie na podwójnym (`koncowkaNaPodwojnym: false`).
+
 Na telefonie we wszystkich grach steruje się palcem.
 
 ## Jak zmieniać gry
@@ -196,6 +230,7 @@ kuchnia/rysowanie.js ← garnki, zwierzaki i kuchnia
 dentystka/gra.js       ← Dentystka Helenka (ustawienia i zasady)
 dentystka/dane.js      ← pacjenci, narzędzia, naklejki i co mówi gra
 dentystka/rysowanie.js ← zwierzaki, ząbki, narzędzia i gabinet
+dart/gra.js            ← Dart (ustawienia, tarcza, lotki i zasady)
 ```
 
 W grze „Na ratunek!” możesz sam narysować etap: otwórz `ratunek/poziomy.js`, zmień literki na mapie (na górze pliku jest legenda: `#` ziemia, `o` moneta, `g` glutek…) i odśwież stronę.
