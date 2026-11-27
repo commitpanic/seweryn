@@ -62,6 +62,13 @@ const KOLORY_KONFETTI = ['#ffd23f', '#ff5a5f', '#4cc9f0', '#3ddc97', '#c77dff', 
 const KOLORY_KIBICOW = ['#ff5a5f', '#4cc9f0', '#ffd23f', '#3ddc97', '#c77dff', '#ff9f1c', '#f1f1f1'];
 const KOLORY_SKORY = ['#f2c79b', '#e0a878', '#c68642', '#8d5524', '#f7d7b5'];
 
+// Pod jakimi nazwami przeglądarka zapamiętuje rekordy.
+// Musi być tutaj, PRZED stanem gry – inaczej rekordy wczytałyby się jako 0.
+const KLUCZE_REKORDOW = {
+  naCzas: 'koszykowka-rekord',
+  bezCzasu: 'koszykowka-rekord-bez-czasu',
+};
+
 
 // =====================================================
 //   STAN GRY
@@ -331,11 +338,6 @@ function halas(p, co, sila) {
 // =====================================================
 //   REKORDY I TRYB GRY (zapamiętywane w przeglądarce)
 // =====================================================
-const KLUCZE_REKORDOW = {
-  naCzas: 'koszykowka-rekord',
-  bezCzasu: 'koszykowka-rekord-bez-czasu',
-};
-
 function wczytajRekord(jakiTryb) {
   try {
     return parseInt(localStorage.getItem(KLUCZE_REKORDOW[jakiTryb]), 10) || 0;

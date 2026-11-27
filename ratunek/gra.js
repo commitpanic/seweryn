@@ -115,6 +115,13 @@ const NIETYKALNOSC = 1.6;         // tyle sekund po zranieniu nic cię nie rani
 const GRAWITACJA_KUL = 9;         // czarodziejskie kule Gburka lecą łukiem
 
 
+// Pod jakimi nazwami przeglądarka zapamiętuje rekord, postęp i bohatera.
+// Muszą być tutaj, PRZED stanem gry – inaczej gra by ich jeszcze nie znała i wszystko by zapomniała.
+const KLUCZ_REKORDU = 'na-ratunek-rekord';
+const KLUCZ_POSTEPU = 'na-ratunek-postep';
+const KLUCZ_BOHATERA = 'na-ratunek-bohater';
+
+
 // =====================================================
 //   STAN GRY
 // =====================================================
@@ -395,9 +402,7 @@ function muzykaSwiata() {
 // =====================================================
 //   ZAPAMIĘTYWANIE (rekord, postęp, ostatni bohater)
 // =====================================================
-const KLUCZ_REKORDU = 'na-ratunek-rekord';
-const KLUCZ_POSTEPU = 'na-ratunek-postep';
-const KLUCZ_BOHATERA = 'na-ratunek-bohater';
+// (nazwy kluczy są na górze pliku, przed stanem gry)
 
 function wczytajRekord() {
   try {
